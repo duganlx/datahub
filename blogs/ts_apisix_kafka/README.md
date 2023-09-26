@@ -198,12 +198,12 @@ msgBlob.arrayBuffer().then((res) => {
 });
 ```
 
-所以, 使用这一套方案最好的使用方式就是在建立 websocket 连接时, 先发送一个 `ListOffset({timestamp=-1})` 的请求获取指定 topic 的指定 partition 下最新的一条消息的 _offset_, 接着以该 _offset_ 为起点开始发送 `Fetch({offset})` 去取得消息数组, 将 _offset_ 设置为数组最后一条记录的 offset 并在下一次 `Fetch()` 时作为参数传递. 需要注意的是
+所以, 使用这一套方案最好的使用方式就是在建立 websocket 连接时, 先发送一个 `ListOffset({timestamp=-1})` 的请求获取指定 topic 的指定 partition 下最新的一条消息的 _offset_, 接着以该 _offset_ 为起点开始发送 `Fetch({offset})` 去取得消息数组, 将 _offset_ 设置为数组最后一条记录的 offset 并在下一次 `Fetch()` 时作为参数传递. 需要注意的是:
 
 - ⚠️ 需要控制好发送`Fetch`的频率, 如果在某一时刻进入该 topic 的消息非常多, 可能会出现 websocket 关闭的异常情况
 - ❌ 如果想要获取从指定的某个 offset 开始的消息, 这一套方案并不是适用！！
 
-最后, 将该套方案封装成一个工具类如下
+最后, 将该套方案封装成一个工具类如下.
 
 ```typescript
 // todo
