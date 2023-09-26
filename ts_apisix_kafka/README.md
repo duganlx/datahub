@@ -30,7 +30,7 @@ protoc-gen-ts: https://github.com/thesayyn/protoc-gen-ts
 
 下载 pubsub.proto 协议文件, 使用命令 `protoc --ts_out=. pubsub.proto` 生成 ts sdk. 在 APISIX Dashboard 中配置 _上游_ 和 _路由_, 配置如下
 
-```json
+```text
 // 上游
 {
   "nodes": [
@@ -89,7 +89,7 @@ protoc-gen-ts: https://github.com/thesayyn/protoc-gen-ts
 }
 ```
 
-pubsub.proto 定义了四种请求命令 `CmdPing, CmdEmpty, CmdKafkaListOffset, CmdKafkaFetch`, 先用前两个来弄个 hello world. 代码和执行结果如下所示.
+pubsub.proto 定义了四种请求命令 `CmdPing, CmdEmpty, CmdKafkaListOffset, CmdKafkaFetch`, 先用前两个来弄个 hello world. 代码和执行结果如下所示. 其中的请求中的`sequence`参数是用于关联响应.
 
 ```typescript
 const serverIp = "ws://eqw-test.eam.com/kafka/websocket";
@@ -149,11 +149,54 @@ ws.onclose = (e) => {
 };
 ```
 
-[helloworld](helloworld.png)
+![helloworld 效果图](helloworld.png)
 
-目前仅仅提供 `ListOffsets` 和 `Fetch` 两个 API 去拉取 Kafka 消息, 暂不支持消费者组特性, 也不能管理偏移量.
+根据官网的描述，目前只提供 `ListOffset` 和 `Fetch` 两个 API 去拉取 Kafka 消息, 暂不支持消费者组特性, 也不能管理偏移量.
 
-communication protocol 请求中的`sequence`用于关联响应. CmdKafkaListOffset 中的 `timestamp` 可以是 `-1, -2, unix timestamp`.
+ListOffset 只是获取 `offset`, 它需要三个参数 `topic, partition, timestamp`, 其中 timestamp 可以取三种值 `-1, -2, unix timestamp`, 具体含义如下. 根据测试发现, 使用 `unix timestamp` 场景下, 当存在多个相同 unix timestamp 的记录时, 会返回第一条记录的 offset.
+
+- `-1`: 目前 partition 中最后一条消息的 offset
+- `-2`: 目前 partition 中第一条消息的 offset
+- `unix timestamp`: 在指定时间戳之后的第一条消息的 offset
+
+Fetch 需要三个参数 `topic, partition, offset`, 测试发现当指定一个*合理*的 offset 时, 它会返回一个 KafkaMessage 数组(`KafkaMessage{offset: int64, timestamp: int64, key: bytes, value: bytes}`), 这个数组的第一条消息的 offset 一定是小于 指定的 `offset`, 但具体小多少并没有总结出规律, 而最后一条一定是目前 topic 的 parition 中最后一条记录. 经过初步测试发现, 这个*合理*的 `offset` 是 $offset ≈ offset_{latestmsg} - 200$ .
+
+```typescript
+// == In ws onopen function ==
+// kafka list offset request
+const kloseq = 100;
+const kloreq = new PubSubReq({
+  sequence: kloseq,
+  cmd_kafka_list_offset: new CmdKafkaListOffset({
+    topic: "rms_order",
+    partition: 0,
+    timestamp: 1695353632271,
+  }),
+});
+ws.send(kloreq.serialize());
+
+// kafka fetch request
+const kfseq = 101;
+const kfreq = new PubSubReq({
+  sequence: kfseq,
+  cmd_kafka_fetch: new CmdKafkaFetch({
+    topic: "rms_order",
+    partition: 0,
+    offset: 54764,
+  }),
+});
+ws.send(kfreq.serialize());
+
+// == In ws onmessage function ==
+const msgBlob: Blob = e.data;
+
+msgBlob.arrayBuffer().then((res) => {
+  const resp: PubSubResp = PubSubResp.deserialize(new Uint8Array(res));
+  const respobj = resp.toObject();
+
+  console.log(respobj);
+});
+```
 
 ## 附录
 
