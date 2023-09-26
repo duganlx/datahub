@@ -159,7 +159,7 @@ ListOffset 只是获取 `offset`, 它需要三个参数 `topic, partition, times
 - `-2`: 目前 partition 中第一条消息的 offset
 - `unix timestamp`: 在指定时间戳之后的第一条消息的 offset
 
-Fetch 需要三个参数 `topic, partition, offset`, 测试发现当指定一个*合理*的 offset 时, 它会返回一个 KafkaMessage 数组(`KafkaMessage{offset: int64, timestamp: int64, key: bytes, value: bytes}`), 这个数组的第一条消息的 offset 一定是小于 指定的 `offset`, 但具体小多少并没有总结出规律, 而最后一条一定是目前 topic 的 parition 中最后一条记录. 经过初步测试发现, 这个*合理*的 `offset` 是 $offset ≈ offset_{latestmsg} - 200$ .
+Fetch 需要三个参数 `topic, partition, offset`, 测试发现当指定一个 _合理_ 的 offset 时, 它会返回一个 KafkaMessage 数组(`KafkaMessage{offset: int64, timestamp: int64, key: bytes, value: bytes}`), 这个数组的第一条消息的 offset 一定是小于 指定的 `offset`, 但具体小多少并没有总结出规律, 而最后一条一定是目前 topic 的 parition 中最后一条记录. 经过初步测试发现, 这个 _合理_ 的 `offset` 是 $offset ≈ offset_{latestmsg} - 200$ .
 
 ```typescript
 // == In ws onopen function ==
@@ -196,6 +196,17 @@ msgBlob.arrayBuffer().then((res) => {
 
   console.log(respobj);
 });
+```
+
+所以, 使用这一套方案最好的使用方式就是在建立 websocket 连接时, 先发送一个 `ListOffset({timestamp=-1})` 的请求获取指定 topic 的指定 partition 下最新的一条消息的 _offset_, 接着以该 _offset_ 为起点开始发送 `Fetch({offset})` 去取得消息数组, 将 _offset_ 设置为数组最后一条记录的 offset 并在下一次 `Fetch()` 时作为参数传递. 需要注意的是
+
+- ⚠️ 需要控制好发送`Fetch`的频率, 如果在某一时刻进入该 topic 的消息非常多, 可能会出现 websocket 关闭的异常情况
+- ❌ 如果想要获取从指定的某个 offset 开始的消息, 这一套方案并不是适用！！
+
+最后, 将该套方案封装成一个工具类如下
+
+```typescript
+// todo
 ```
 
 ## 附录
