@@ -203,11 +203,197 @@ msgBlob.arrayBuffer().then((res) => {
 - ⚠️ 需要控制好发送`Fetch`的频率, 如果在某一时刻进入该 topic 的消息非常多, 可能会出现 websocket 关闭的异常情况
 - ❌ 如果想要获取从指定的某个 offset 开始的消息, 这一套方案并不是适用！！
 
-最后, 将该套方案封装成一个工具类如下.
+最后, 将该套方案封装成一个工具类`ApisixpullkafkaWebSocket`如下.
 
 ```typescript
-// todo
+import {
+  CmdKafkaFetch,
+  CmdKafkaListOffset,
+  PubSubReq,
+  PubSubResp,
+} from "./pubsub";
+
+export interface StructuredKafkaMessage {
+  offset: number;
+  timestamp: number;
+  value: string;
+}
+
+export interface apisixpullkafkaWsParam {
+  url: string;
+  topic: string;
+  partition: number;
+  notify: (msgs: StructuredKafkaMessage[]) => void;
+}
+
+export default class ApisixpullkafkaWebSocket {
+  // ws state: 0(CONNECTING), 1(OPEN), 2(CLOSING), 3(CLOSED)
+  socket!: WebSocket;
+  url: string;
+  offset: number;
+  topic: string;
+  partition: number;
+  notify!: (msgs: StructuredKafkaMessage[]) => void;
+
+  constructor(param: apisixpullkafkaWsParam) {
+    this.url = param.url;
+    this.offset = -1;
+    this.notify = param.notify;
+    this.topic = param.topic;
+    this.partition = param.partition;
+
+    const wsurl = `ws://${this.url}`;
+    const websocket2 = new WebSocket(wsurl);
+    this.socket = websocket2;
+    this.socket.onopen = this.onopen;
+    this.socket.onmessage = this.onmessage;
+    this.socket.onclose = this.onclose;
+    this.socket.onerror = this.onerror;
+  }
+
+  onopen = () => {
+    this.sendKafkaListOffsetReq(-1);
+  };
+
+  unitoNotify = (msgs: StructuredKafkaMessage[], preoffset: number) => {
+    const newMsgs = msgs.filter((msg) => {
+      return msg.offset > preoffset;
+    });
+
+    if (this.notify === undefined || newMsgs.length === 0) {
+      return;
+    }
+
+    console.log(
+      "notify new message, offset is",
+      newMsgs.map((msg) => msg.offset)
+    );
+    this.notify(newMsgs);
+  };
+
+  onmessage = (ev: MessageEvent) => {
+    const msgBlob: Blob = ev.data;
+
+    msgBlob.arrayBuffer().then((res) => {
+      const resp: PubSubResp = PubSubResp.deserialize(new Uint8Array(res));
+      const respobj = resp.toObject();
+
+      console.log("receive new message", respobj);
+
+      if (respobj.kafka_list_offset_resp !== undefined) {
+        // first
+        this.offset = respobj.kafka_list_offset_resp.offset || -1;
+        this.offset = this.offset - 10;
+        console.log("kafka_list_offset_resp, offset is", this.offset);
+        if (this.offset !== -1) {
+          console.log("[first] send kafka_fetch req, offset is", this.offset);
+          this.sendKafkaFetchReq(this.offset);
+        }
+      } else if (respobj.kafka_fetch_resp !== undefined) {
+        // subsequent
+        const msgs = respobj.kafka_fetch_resp.messages || [];
+        console.log("kafka_fetch_resp, msgs is", msgs);
+        const remsgs = this.uint8tostr(msgs);
+        console.log("after uint8tostr, msg is", remsgs);
+
+        if (remsgs.length > 0) {
+          this.unitoNotify(remsgs, this.offset);
+          const latestOffset = remsgs[remsgs.length - 1].offset || -1;
+          this.offset = latestOffset;
+        }
+
+        // 5s 轮询
+        setTimeout(() => {
+          console.log(
+            "[subsequent] send kafka_fetch req, offset is",
+            this.offset
+          );
+          this.sendKafkaFetchReq(this.offset);
+        }, 5000);
+      } else {
+        console.log(respobj);
+      }
+    });
+  };
+
+  // -1: latest msg; -2: first msg; unix timestamp
+  sendKafkaListOffsetReq = (timestamp: number) => {
+    const kloseq = 101;
+    const kloreq = new PubSubReq({
+      sequence: kloseq,
+      cmd_kafka_list_offset: new CmdKafkaListOffset({
+        topic: this.topic,
+        partition: this.partition,
+        timestamp: timestamp,
+      }),
+    });
+    this.socket.send(kloreq.serialize());
+  };
+
+  sendKafkaFetchReq = (offset: number) => {
+    const kfseq = 102;
+    const kfreq = new PubSubReq({
+      sequence: kfseq,
+      cmd_kafka_fetch: new CmdKafkaFetch({
+        topic: this.topic,
+        partition: this.partition,
+        offset: offset,
+      }),
+    });
+    this.socket.send(kfreq.serialize());
+  };
+
+  // unit8array -> string
+  uint8tostr = (msgs: any[]) => {
+    const remsgs: StructuredKafkaMessage[] = [];
+
+    for (let i = 0; i < msgs.length; i++) {
+      const msg = msgs[i];
+      const offset = msg.offset;
+      const timestamp = msg.timestamp;
+      const decoder = new TextDecoder();
+      const value = decoder.decode(msg.value);
+
+      const item: StructuredKafkaMessage = {
+        offset: offset,
+        timestamp: timestamp,
+        value: value,
+      };
+
+      remsgs.push(item);
+    }
+
+    return remsgs;
+  };
+
+  onerror = (e: Event) => {
+    console.log("websocket connect error:", e);
+  };
+
+  onclose = (e: Event) => {
+    console.log("websocket connect close:", e);
+  };
+}
 ```
+
+该工具类使用方式以及运行结果如下所示. 每次有新数据过来时, 就会触发调用 `notify()` 方法, 并将新数据作为参数传入, 只需要接受即可.
+
+```typescript
+const [ldata, setLData] = useState<any[]>([]);
+const [series, setSeries] = useState<any[]>([]);
+
+useEffect(() => {
+  const wsCfg = {
+    url: "eqw-test.eam.com/kafka/websocket",
+    notify: (msgs: any[]) => setLData([...msgs]),
+    topic: "rms_order",
+    partition: 0,
+  };
+  new ApisixpullkafkaWebSocket(wsCfg);
+}, []);
+```
+
+![ApisixpullkafkaWebSocket 效果图](wrapclass.png)
 
 ## 附录
 
