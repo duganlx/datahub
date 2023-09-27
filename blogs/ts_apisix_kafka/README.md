@@ -252,6 +252,7 @@ export default class ApisixpullkafkaWebSocket {
   }
 
   onopen = () => {
+    console.log("[first] send kafka_list_offset req, timestamp is ", -1);
     this.sendKafkaListOffsetReq(-1);
   };
 
