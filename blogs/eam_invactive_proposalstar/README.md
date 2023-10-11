@@ -32,9 +32,7 @@
 
 ![工作流](processv1.png)
 
-具体开发内容如下
-
-1. 新建数据库表
+后端项目用 kratos 开发，项目代码放在 `EAM > BIG-DATA > EVOLUTION-QUANTWEB > invest`。使用的接口 proto 是在 `eam_api > invest` 项目中，采用编译好接口打 tag 进行使用。
 
 ## 附录
 
