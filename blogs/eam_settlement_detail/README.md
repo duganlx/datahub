@@ -4,58 +4,95 @@
 
 该页面所涉及到的数据均保存到`UniverseData`对象中。该对象是由 `Balance` 表延伸而来，包含了很多延伸计算出来的字段。具体的字段如下所示。
 
-| 字段名                         | 中文名                   | 备注                                                                                                                                                                |
-| ------------------------------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| auCode                         | 资金账号                 |                                                                                                                                                                     |
-| auName                         | 资金账号名称             |                                                                                                                                                                     |
-| tradeDate                      | 交易日                   | 日期基准字段，13 位时间戳                                                                                                                                           |
-| currency                       | 币种                     | 人民币 CNY                                                                                                                                                          |
-| totalAssetInitial              | 日初总资产               |                                                                                                                                                                     |
-| totalAsset                     | 总资产                   |                                                                                                                                                                     |
-| equityInitial                  | 日初持仓市值             |                                                                                                                                                                     |
-| equity                         | 持仓市值                 |                                                                                                                                                                     |
-| fundInitial                    | 日初资金                 |                                                                                                                                                                     |
-| balance                        | 资金余额                 |                                                                                                                                                                     |
-| totalLiabilityInitial          | 日初总负债               |                                                                                                                                                                     |
-| totalLiability                 | 总负债                   |                                                                                                                                                                     |
-| cashDebtInitial                | 日初资金负债             |                                                                                                                                                                     |
-| cashDebt                       | 资金负债                 |                                                                                                                                                                     |
-| securityDebtInitial            | 日初证券负债             |                                                                                                                                                                     |
-| securityDebt                   | 证券负债                 |                                                                                                                                                                     |
-| netEquityTraded                | 净买入市值               |                                                                                                                                                                     |
-| equityBuy                      | 买入市值                 |                                                                                                                                                                     |
-| equitySell                     | 卖出市值                 |                                                                                                                                                                     |
-| fundDepositWithdraw            | 净出入金                 | 资金转入 - 资金转出                                                                                                                                                 |
-| fundDeposit                    | 资金转入                 |                                                                                                                                                                     |
-| fundWithdraw                   | 资金转出                 |                                                                                                                                                                     |
-| equityDeposit                  | 证券转入                 |                                                                                                                                                                     |
-| equityWithdraw                 | 证券转出                 |                                                                                                                                                                     |
-| commission                     | 手续费                   |                                                                                                                                                                     |
-| settleTime                     | 清算时间                 |                                                                                                                                                                     |
-| equityInTransit                | 在途市值                 |                                                                                                                                                                     |
-| fundAvailable                  | 可用资金                 |                                                                                                                                                                     |
-| fundInTransit                  | 在途资金                 |                                                                                                                                                                     |
-| fundFrozen                     | 冻结资金                 |                                                                                                                                                                     |
-| type                           | 账户类型                 |                                                                                                                                                                     |
-| createTime                     | 成交时间                 |                                                                                                                                                                     |
-| updateTime                     | 更新时间                 |                                                                                                                                                                     |
-| isT0                           | 是否 T+0                 | 根据`ads_eqwads_unit_label_value`表中 label 为 strategy，value 为 T0 和 T1 的记录。如果当天有 T1 的记录，则直接判定为 _非 T0_；否则根据当天是否有 T0 记录进行判定。 |
-| isValid                        | 是否有效                 | 头尾如果出现 `[持仓市值, 证券负债, 手续费]` 都为 0，则判定为无效数据，中间部分如果连续三天出现这三个字段为 0 的话，也判定为无效数据                                 |
-| totalAssetPnl                  | 当日盈亏                 |                                                                                                                                                                     |
-| totalAssetPnlCum               | 累计盈亏                 |                                                                                                                                                                     |
-| prevTotalAssetPnlCum           | 昨日累计盈亏             |                                                                                                                                                                     |
-| totalAssetPnlPercentage        | 当日盈亏%                |                                                                                                                                                                     |
-| totalAssetPnlCumPercentage     | 累计盈亏%                |                                                                                                                                                                     |
-| prevTotalAssetPnlCumPercentage | 昨日累计盈亏%            |                                                                                                                                                                     |
-| verifyTotalAssetInitial        | 核算字段: 日初总资产     | 日初持仓市值 + 日初资金余额                                                                                                                                         |
-| isOkTotalAssetInitial          | 验证字段结果: 日初总资产 | 如果核算的结果和取数回来的结果一致，则为 true；反之为 false                                                                                                         |
-| verifyTotalAsset               | 核算字段: 总资产         | 持仓市值 + 在途市值 + 资金余额                                                                                                                                      |
-| isOkTotalAsset                 | 验证字段结果: 总资产     | 如果核算的结果和取数回来的结果一致，则为 true；反之为 false                                                                                                         |
-| verifyTotalLiability           | 核算字段: 总负债         | 资金负债 + 证券负债                                                                                                                                                 |
-| isOkTotalLiability             | 验证字段结果: 总负债     | 如果核算的结果和取数回来的结果一致，则为 true；反之为 false                                                                                                         |
-| banchmarkPnlPercentage         | 基准盈亏%                | 数据取 `dm_histdata.bar_day`，按照公式 pnl% = (当日收盘价 - 昨日收盘价) / 昨日收盘价 \* 100% 计算得到                                                               |
-| banchmarkPnlCumPercentage      | 基准累计盈亏%            |                                                                                                                                                                     |
-| benchmarkPreClose              | 基准指数昨收             | bar_day 表的字段 pre_close                                                                                                                                          |
+| 字段名                                          | 中文名                   | 备注                                                                                                                                                                |
+| ----------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| auCode                                          | 资金账号                 |                                                                                                                                                                     |
+| auName                                          | 资金账号名称             |                                                                                                                                                                     |
+| tradeDate                                       | 交易日                   | 日期基准字段，13 位时间戳                                                                                                                                           |
+| currency                                        | 币种                     | 人民币 CNY                                                                                                                                                          |
+| totalAssetInitial                               | 日初总资产               |                                                                                                                                                                     |
+| totalAsset                                      | 总资产                   |                                                                                                                                                                     |
+| equityInitial                                   | 日初持仓市值             |                                                                                                                                                                     |
+| equity                                          | 持仓市值                 |                                                                                                                                                                     |
+| fundInitial                                     | 日初资金                 |                                                                                                                                                                     |
+| balance                                         | 资金余额                 |                                                                                                                                                                     |
+| totalLiabilityInitial                           | 日初总负债               |                                                                                                                                                                     |
+| totalLiability                                  | 总负债                   | 净资产 = 总资产 - 总负债                                                                                                                                            |
+| cashDebtInitial                                 | 日初资金负债             |                                                                                                                                                                     |
+| cashDebt                                        | 资金负债                 |                                                                                                                                                                     |
+| securityDebtInitial                             | 日初证券负债             |                                                                                                                                                                     |
+| securityDebt                                    | 证券负债                 |                                                                                                                                                                     |
+| netEquityTraded                                 | 净买入市值               |                                                                                                                                                                     |
+| equityBuy                                       | 买入市值                 |                                                                                                                                                                     |
+| equitySell                                      | 卖出市值                 |                                                                                                                                                                     |
+| fundDepositWithdraw                             | 净出入金                 | 资金转入 - 资金转出                                                                                                                                                 |
+| fundDeposit                                     | 资金转入                 |                                                                                                                                                                     |
+| fundWithdraw                                    | 资金转出                 |                                                                                                                                                                     |
+| equityDeposit                                   | 证券转入                 |                                                                                                                                                                     |
+| equityWithdraw                                  | 证券转出                 |                                                                                                                                                                     |
+| commission                                      | 手续费                   |                                                                                                                                                                     |
+| settleTime                                      | 清算时间                 |                                                                                                                                                                     |
+| equityInTransit                                 | 在途市值                 |                                                                                                                                                                     |
+| fundAvailable                                   | 可用资金                 |                                                                                                                                                                     |
+| fundInTransit                                   | 在途资金                 |                                                                                                                                                                     |
+| fundFrozen                                      | 冻结资金                 |                                                                                                                                                                     |
+| type                                            | 账户类型                 |                                                                                                                                                                     |
+| createTime                                      | 成交时间                 |                                                                                                                                                                     |
+| updateTime                                      | 更新时间                 |                                                                                                                                                                     |
+| isT0                                            | 是否 T+0                 | 根据`ads_eqwads_unit_label_value`表中 label 为 strategy，value 为 T0 和 T1 的记录。如果当天有 T1 的记录，则直接判定为 _非 T0_；否则根据当天是否有 T0 记录进行判定。 |
+| isValid                                         | 是否有效                 | 头尾如果出现 `[持仓市值, 证券负债, 手续费]` 都为 0，则判定为无效数据，中间部分如果连续三天出现这三个字段为 0 的话，也判定为无效数据                                 |
+| totalAssetPnl                                   | 当日盈亏                 | 共有三种情况，参看下方公式 _当日盈亏_                                                                                                                               |
+| totalAssetPnlCum                                | 累计盈亏                 | 参看下方公式汇总 _累计盈亏_                                                                                                                                         |
+| prevTotalAssetPnlCum                            | 昨日累计盈亏             | 计算 _累计盈亏_ 时使用                                                                                                                                              |
+| totalAssetPnlPercentage                         | 当日盈亏%                | 共有三种情况，参看下方公式 _当日盈亏%_                                                                                                                              |
+| totalAssetPnlCumPercentage                      | 累计盈亏%                | 参看下方公式汇总 _累计盈亏_                                                                                                                                         |
+| prevTotalAssetPnlCumPercentage                  | 昨日累计盈亏%            | 计算 _累计盈亏_ 时使用                                                                                                                                              |
+| verifyTotalAssetInitial                         | 核算字段: 日初总资产     | 日初持仓市值 + 日初资金余额                                                                                                                                         |
+| isOkTotalAssetInitial                           | 验证字段结果: 日初总资产 | 如果核算的结果和取数回来的结果一致，则为 true；反之为 false                                                                                                         |
+| verifyTotalAsset                                | 核算字段: 总资产         | 持仓市值 + 在途市值 + 资金余额                                                                                                                                      |
+| isOkTotalAsset                                  | 验证字段结果: 总资产     | 如果核算的结果和取数回来的结果一致，则为 true；反之为 false                                                                                                         |
+| verifyTotalLiability                            | 核算字段: 总负债         | 资金负债 + 证券负债                                                                                                                                                 |
+| isOkTotalLiability                              | 验证字段结果: 总负债     | 如果核算的结果和取数回来的结果一致，则为 true；反之为 false                                                                                                         |
+| banchmarkPnlPercentage                          | 基准盈亏%                | 数据取 `dm_histdata.bar_day`，按照公式 pnl% = (当日收盘价 - 昨日收盘价) / 昨日收盘价 \* 100% 计算得到                                                               |
+| banchmarkPnlCumPercentage                       | 基准累计盈亏%            | 参看下方公式汇总 _累计盈亏_                                                                                                                                         |
+| benchmarkPreClose                               | 基准指数昨收             | bar_day 表的字段 pre_close                                                                                                                                          |
+| zs_totalAssetPnlHedge                           | 当日盈亏(对冲)           | `zs` 开头表示对冲类型为 指数                                                                                                                                        |
+| zs_totalAssetPnlHedgeCum                        | 累计盈亏(对冲)           | 累计盈亏(对冲) = 昨日累计盈亏(对冲) + 当日盈亏(对冲)                                                                                                                |
+| zs_prevTotalAssetPnlHedgeCum                    | 昨日累计盈亏(对冲)       | 计算 _累计盈亏(对冲)_ 时使用                                                                                                                                        |
+| zs_alpha                                        | 当日超额                 | 当日盈亏 - 当日盈亏(对冲, 对冲类型: 指数)                                                                                                                           |
+| zs_alphaCum                                     | 累计超额                 | 累计超额 = 昨日累计超额 + 当日超额\*                                                                                                                                |
+| zs_prevAlphaCum                                 | 昨日累计超额             | 计算累计超额时使用                                                                                                                                                  |
+| zs_totalAssetPnlHedgePercentage                 | 当日盈亏%(对冲)          | 所除分母维度是总资产，参看下方公式汇总 _当日盈亏%(对冲)_                                                                                                            |
+| zs_totalAssetPnlHedgeCumPercentage              | 累计盈亏%(对冲)          | 累计盈亏%(对冲) = 昨日累计盈亏%(对冲) + 当日盈亏%(对冲)                                                                                                             |
+| zs_prevTotalAssetPnlHedgeCumPercentage          | 昨日累计盈亏%(对冲)      | 计算累计盈亏%(对冲)时使用                                                                                                                                           |
+| zs_totalAssetPnlHedgePercentage_rcccsz          | 当日盈亏%(对冲)          | 所除分母维度是总市值，参看下方公式汇总 _当日盈亏%(对冲)_                                                                                                            |
+| zs_totalAssetPnlHedgeCumPercentage_rcccsz       | 累计盈亏%(对冲)          |                                                                                                                                                                     |
+| zs_prevTotalAssetPnlHedgeCumPercentage_rcccsz   | 昨日累计盈亏%(对冲)      |                                                                                                                                                                     |
+| zs_alphaPercentage                              | 当日超额                 |                                                                                                                                                                     |
+| zs_alphaCumPercentage                           | 累计超额                 |                                                                                                                                                                     |
+| zs_prevAlphaCumPercentage                       | 昨日累计超额             |                                                                                                                                                                     |
+| zs_alphaPercentage_rcccsz                       | 当日超额                 |                                                                                                                                                                     |
+| zs_alphaCumPercentage_rcccsz                    | 累计超额                 |                                                                                                                                                                     |
+| zs_prevAlphaCumPercentage_rcccsz                | 昨日累计超额             |                                                                                                                                                                     |
+| xnqz_ticket                                     | 张数                     | `xnqz` 开头表示对冲类型为 虚拟期指                                                                                                                                  |
+| xnqz_totalAssetPnlHedge                         | 当日盈亏(对冲)           |                                                                                                                                                                     |
+| xnqz_totalAssetPnlHedgeCum                      | 累计盈亏(对冲)           |                                                                                                                                                                     |
+| xnqz_prevTotalAssetPnlHedgeCum                  | 昨日累计盈亏(对冲)       |                                                                                                                                                                     |
+| xnqz_alpha                                      | 当日超额                 |                                                                                                                                                                     |
+| xnqz_alphaCum                                   | 累计超额                 |                                                                                                                                                                     |
+| xnqz_prevAlphaCum                               | 昨日累计超额             |                                                                                                                                                                     |
+| xnqz_totalAssetPnlHedgePercentage               | 当日盈亏%(对冲)          |                                                                                                                                                                     |
+| xnqz_totalAssetPnlHedgeCumPercentage            | 累计盈亏%(对冲)          |                                                                                                                                                                     |
+| xnqz_prevTotalAssetPnlHedgeCumPercentage        | 昨日累计盈亏%(对冲)      |                                                                                                                                                                     |
+| xnqz_totalAssetPnlHedgePercentage_rcccsz        | 当日盈亏%(对冲)          |                                                                                                                                                                     |
+| xnqz_totalAssetPnlHedgeCumPercentage_rcccsz     | 累计盈亏%(对冲)          |                                                                                                                                                                     |
+| xnqz_prevTotalAssetPnlHedgeCumPercentage_rcccsz | 昨日累计盈亏%(对冲)      |                                                                                                                                                                     |
+| xnqz_alphaPercentage                            | 当日超额%                |                                                                                                                                                                     |
+| xnqz_alphaCumPercentage                         | 累计超额%                |                                                                                                                                                                     |
+| xnqz_prevAlphaCumPercentage                     | 昨日累计超额%            |                                                                                                                                                                     |
+| xnqz_alphaPercentage_rcccsz                     | 当日超额%                |                                                                                                                                                                     |
+| xnqz_alphaCumPercentage_rcccsz                  | 累计超额%                |                                                                                                                                                                     |
+| xnqz_prevAlphaCumPercentage_rcccsz              | 昨日累计超额%            |                                                                                                                                                                     |
 
 计算公式汇总
 
@@ -65,6 +102,7 @@
 
 ```text
 当日盈亏 = 卖出市值 + 净出入金 - 买入市值 + 资金转出 - 资金转入
+当日盈亏% = 当日盈亏 / 买入市值
 ```
 
 - 非 T0 交易，按日初总资产
@@ -118,7 +156,7 @@
 
 - 主力合约 (目前暂未实现)
 
-Alpha 的计算为
+当日超额 Alpha 的计算为
 
 ```
 alpha = 当日盈亏 - 当日盈亏(对冲)
