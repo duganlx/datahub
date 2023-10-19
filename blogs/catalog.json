@@ -1,5 +1,13 @@
 [
   {
+    "id": 8,
+    "title": "s2 table 使用总结",
+    "tags": ["ts", "s2"],
+    "updateTime": "2023-10-19",
+    "createTime": "2023-10-19",
+    "dir": "s2_table"
+  },
+  {
     "id": 7,
     "title": "结算明细报表 设计实现",
     "tags": ["EAM", "设计"],
