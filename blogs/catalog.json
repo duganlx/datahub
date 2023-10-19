@@ -1,5 +1,21 @@
 [
   {
+    "id": 10,
+    "title": "技术指标 KDJ",
+    "tags": ["股市", "技术指标"],
+    "updateTime": "2023-10-19",
+    "createTime": "2023-10-19",
+    "dir": "stock_tech_kdj"
+  },
+  {
+    "id": 9,
+    "title": "股市术语",
+    "tags": ["股市"],
+    "updateTime": "2023-10-19",
+    "createTime": "2023-10-19",
+    "dir": "stock_term"
+  },
+  {
     "id": 8,
     "title": "s2 table 使用总结",
     "tags": ["ts", "s2"],
@@ -17,8 +33,8 @@
   },
   {
     "id": 6,
-    "title": "股票技术指标 MACD",
-    "tags": ["股票", "技术指标"],
+    "title": "技术指标 MACD",
+    "tags": ["股市", "技术指标"],
     "updateTime": "2023-10-08",
     "createTime": "2023-10-08",
     "dir": "stock_tech_macd"
@@ -33,8 +49,8 @@
   },
   {
     "id": 4,
-    "title": "股票技术指标 MA",
-    "tags": ["股票", "技术指标"],
+    "title": "技术指标 MA",
+    "tags": ["股市", "技术指标"],
     "updateTime": "2023-10-08",
     "createTime": "2023-10-07",
     "dir": "stock_tech_ma"
