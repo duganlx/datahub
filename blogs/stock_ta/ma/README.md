@@ -12,10 +12,10 @@ $$
 
 代码实现如下
 
-```py
+```python
 import pandas as pd
 
-def calc_sma(series，window) -> pd.Series:
+def calc_sma(series, window) -> pd.Series:
     """
     计算简单移动平均线 MA
     """
@@ -24,7 +24,7 @@ def calc_sma(series，window) -> pd.Series:
 
     return ma
 
-def calc_expma(close，n):
+def calc_expma(close, n):
     """
     计算指数移动平均线 EXPMA
     """
@@ -40,7 +40,7 @@ def calc_expma(close，n):
 
         expma.append(cur_expma)
 
-    expma = pd.Series(expma，name=f'EXPMA{n}')
+    expma = pd.Series(expma, name=f'EXPMA{n}')
     return expma
 ```
 

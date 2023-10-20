@@ -1,7 +1,21 @@
 from datahub_pysdk.dataHub import EAMApi
+import pandas as pd
+import yaml
+import os
+import stock_tech as sta
 
-# todo 读取配置文件
-eamApi = EAMApi(datahub="eqw.eam.com", user='', password='')
+current_path = os.path.dirname(os.path.abspath(__file__))
+with open(current_path +"/config.yaml", "r") as file:
+    yaml_data = yaml.load(file, Loader=yaml.FullLoader)
+
+pysdk_conf = yaml_data['pysdk']
+del yaml_data
+
+eamApi = EAMApi(
+    datahub=pysdk_conf['url'], 
+    user=pysdk_conf['user'], 
+    password=pysdk_conf['password']
+)
 
 df = eamApi.GetData(
     db_name='dm_histdata',
@@ -26,6 +40,18 @@ df = eamApi.GetData(
     # where='trade_date > \'2023-09-01\''
 )
 
+# raw data
+# print(df)
+
+# sma
+sma = sta.sma(df['close'], 5)
+macd = sta.macd(df['close'])
+
+df = pd.concat([
+    df[['trade_date', 'close']], 
+    # sma,
+    macd,
+], axis=1)
 print(df)
 
-df.to_csv('tmpfiles/gzmt.csv', index=False)
+# df.to_csv('tmpfiles/gzmt.csv', index=False)
