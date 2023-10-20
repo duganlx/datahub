@@ -1,15 +1,17 @@
 import pandas as pd
 import numpy as np
 
-# 简单移动平均线
+
 def sma(series, window) -> pd.Series:
+    # 简单移动平均线
     ma = series.rolling(window=window).mean()
     ma.name = f'MA{window}'
 
     return ma
 
-# 指数移动平均线
+
 def expma(close, n):
+    # 指数移动平均线
     expma = []
     for ele in close.array:
         if len(expma) == 0:
@@ -25,7 +27,7 @@ def expma(close, n):
     expma = pd.Series(expma, name=f'EXPMA{n}')
     return expma
 
-# macd
+
 def macd(close) -> pd.DataFrame:
     ema12, ema26 = [], []
     for ele in close.array:
@@ -61,14 +63,17 @@ def macd(close) -> pd.DataFrame:
     df = pd.concat([dif, dea, macd], axis=1)
     return df
 
-# kdj
-def kdj(close, high, low) -> pd.DataFrame:
+
+def kdj(close, high, low, verbose=False) -> pd.DataFrame:
     lowest_low = low.rolling(window=9, min_periods=1).min()
-    highest_low = high.rolling(window=9, min_periods=1).max()
-    rsv = (close - lowest_low) / (highest_low - lowest_low) * 100
+    highest_high = high.rolling(window=9, min_periods=1).max()
+    rsv = (close - lowest_low) / (highest_high - lowest_low) * 100
     rsv = pd.Series(rsv, name='RSV')
+    lowest_low = pd.Series(lowest_low, name='lowest_low')
+    highest_high = pd.Series(highest_high, name='highest_high')
 
     k, d, j = [], [], []
+    mid_k_2pk = []
     for ele in rsv.array:
         if len(k) == 0:
             # 初始值50
@@ -78,6 +83,7 @@ def kdj(close, high, low) -> pd.DataFrame:
             continue
 
         pre_k = k[-1]
+        mid_k_2pk.append(2 * pre_k)
         cur_k = (2 * pre_k + ele) / 3
 
         pre_d = d[-1]
@@ -89,10 +95,18 @@ def kdj(close, high, low) -> pd.DataFrame:
         d.append(cur_d)
         j.append(cur_j)
 
+    mid_k_2pk = pd.Series(mid_k_2pk, name='2xpre_k')
     k = pd.Series(k, name='K')
     d = pd.Series(d, name='D')
     j = pd.Series(j, name='J')
 
-    df = pd.concat([k, d, j], axis=1)
+    if verbose:
+        df = pd.concat([k, rsv, mid_k_2pk,
+                        d,
+                        j,
+                        close, lowest_low, highest_high],
+                       axis=1)
+    else:
+        df = pd.concat([k, d, j], axis=1)
 
     return df
