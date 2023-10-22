@@ -1,5 +1,14 @@
 # Todo
 
-1. kratos 后端开发弄一个自动生成器
-2. 做一个 ai 机器人，对接 https://platform.baichuan-ai.com/docs/api
-3. 结算整理代码
+代办事项
+
+## kiGo
+
+- [] blogs 目录添加字段是否展示
+- [] markdown 展示样式优化
+- [] 开发新模块 ai 机器人，对接 https://platform.baichuan-ai.com/docs/api
+
+## Blogs
+
+- [] kratos 后端开发代码整理
+- [] 结算代码整理

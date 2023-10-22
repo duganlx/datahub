@@ -68,22 +68,23 @@ def kdj(close, high, low, verbose=False) -> pd.DataFrame:
     lowest_low = low.rolling(window=9, min_periods=1).min()
     highest_high = high.rolling(window=9, min_periods=1).max()
     rsv = (close - lowest_low) / (highest_high - lowest_low) * 100
-    rsv = pd.Series(rsv, name='RSV')
+    # 如果分母为0, 则 rsv为0
+    rsv = pd.Series(rsv, name='RSV').fillna(0)
     lowest_low = pd.Series(lowest_low, name='lowest_low')
     highest_high = pd.Series(highest_high, name='highest_high')
 
     k, d, j = [], [], []
-    mid_k_2pk = []
+    mid_pk = []
     for ele in rsv.array:
         if len(k) == 0:
             # 初始值50
             k.append(50)
+            mid_pk.append(np.nan)
             d.append(50)
             j.append(50)
             continue
 
         pre_k = k[-1]
-        mid_k_2pk.append(2 * pre_k)
         cur_k = (2 * pre_k + ele) / 3
 
         pre_d = d[-1]
@@ -91,17 +92,18 @@ def kdj(close, high, low, verbose=False) -> pd.DataFrame:
 
         cur_j = 3 * cur_k - 2 * cur_d
 
+        mid_pk.append(pre_k)
         k.append(cur_k)
         d.append(cur_d)
         j.append(cur_j)
 
-    mid_k_2pk = pd.Series(mid_k_2pk, name='2xpre_k')
+    mid_pk = pd.Series(mid_pk, name='pre_k')
     k = pd.Series(k, name='K')
     d = pd.Series(d, name='D')
     j = pd.Series(j, name='J')
 
     if verbose:
-        df = pd.concat([k, rsv, mid_k_2pk,
+        df = pd.concat([k, rsv, mid_pk,
                         d,
                         j,
                         close, lowest_low, highest_high],

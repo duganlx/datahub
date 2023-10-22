@@ -38,7 +38,7 @@ df = eamApi.GetData(
     ],
     orderby='order by trade_date',
     # where='trade_date > toDateTime64(\'2023-09-01\', 3, \'Asia/Shanghai\')' # is ok
-    where='trade_date > \'2023-07-01\''
+    # where='trade_date > \'2023-07-01\''
 )
 
 df['trade_date'] = pd.to_datetime(df['trade_date'])
@@ -46,7 +46,6 @@ df['trade_date'] = pd.to_datetime(df['trade_date'])
 # print(df)
 
 # == data processing ==
-# sma
 sma = sta.sma(df['close'], 5)
 macd = sta.macd(df['close'])
 kdj = sta.kdj(df['close'], df['high'], df['low'], verbose=True)
@@ -57,12 +56,26 @@ df = pd.concat([
     # macd,
     kdj
 ], axis=1)
-# print(df)
+print(df)
 
 # == date range filter ==
-begin_date = pd.to_datetime('2023-07-05')
-end_date = pd.to_datetime('2023-08-05')
-drf_df = df[(df["trade_date"] >= begin_date) & (df["trade_date"] <= end_date)]
-print(drf_df)
+# begin_date = pd.to_datetime('2023-09-01')
+# end_date = pd.to_datetime('2023-10-20')
+# drf_df = df[(df["trade_date"] >= begin_date) & (df["trade_date"] <= end_date)]
+# print(drf_df)
+
+# == value location ==
+# nan_index = df['K'].index[df['K'].isna()].tolist()[0]
+# print(df.loc[nan_index-5:nan_index+5])
+
+min_index = df['J'].idxmin()
+print("[min]", df.loc[min_index])
+
+max_index = df['J'].idxmax()
+print("[max]", df.loc[max_index])
+
+# == value  ==
+# print('[kdj]', len(df), len(df[df['J'] > 100]), len(df[df['J'] < 0]))
+
 
 # df.to_csv('tmpfiles/gzmt.csv', index=False)
