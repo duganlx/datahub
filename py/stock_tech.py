@@ -64,9 +64,9 @@ def macd(close) -> pd.DataFrame:
     return df
 
 
-def kdj(close, high, low, verbose=False) -> pd.DataFrame:
-    lowest_low = low.rolling(window=9, min_periods=1).min()
-    highest_high = high.rolling(window=9, min_periods=1).max()
+def kdj(close, high, low, verbose=False, wins=9) -> pd.DataFrame:
+    lowest_low = low.rolling(window=wins, min_periods=1).min()
+    highest_high = high.rolling(window=wins, min_periods=1).max()
     rsv = (close - lowest_low) / (highest_high - lowest_low) * 100
     # 如果分母为0, 则 rsv为0
     rsv = pd.Series(rsv, name='RSV').fillna(0)

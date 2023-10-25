@@ -1,1 +1,5 @@
 py/__pycache__
+
+# data 存放数据
+data/tmp/*
+!data/tmp/README.md
