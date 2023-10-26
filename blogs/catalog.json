@@ -42,7 +42,7 @@
     "updateTime": "2023-10-08",
     "createTime": "2023-10-08",
     "dir": "stock_ta/macd",
-    "publish": false
+    "publish": true
   },
   {
     "id": 5,
