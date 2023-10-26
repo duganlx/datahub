@@ -88,7 +88,20 @@ def rolling_df(df, window, func, name):
     return res
 ```
 
-## 观点
+## 研究
+
+通过 macd 的计算公式，我们可以到 白线 dif 是用 12 日的指数移动平均线减去 26 日的指数移动平均线。黄线 dea 是在 dif 的基础上求了个 9 日的指数移动平均线。利用移动平均线其实就是平滑曲线，所以 dif 会比 dea 反应更加剧烈一点，我习惯用快慢线来描述：dif 快线、dea 慢线。柱状图 macd 则是用快线减去慢线所得到的差值（扩大两倍）。
+
+这么看来，其实 macd 有点类似套娃的过程了。指数移动平均线 EMA 比普通的移动平均线会更加侧重当日的股价变化，dif 用 12 日的 EMA（快线）减去 26 日 EMA（慢线），其实就有三种情况，分别是大于 0、等于 0、小于 0 三种情况。当股价处于上升状态时，dif 大于 0；当股价下跌时，dif 小于 0。而 dif 等于 0 其实就是移动平均线的金叉或死叉信号，当 dif 从负转零，即为金叉，反之为死叉。当 dif 的绝对值变大时，代表长短期均线的开口越大，代表短期股价的上涨或下跌呈现加速状态，反之则呈现减弱态势。dea 是在 dif 上计算了一次均值。
+
+**参考**
+
+1. [为什么骗子推荐的股票总是涨？](https://mp.weixin.qq.com/s?__biz=MzAxMjM4MTEwNg==&mid=2651704635&idx=1&sn=49048b7810552fd91f08d654bf75fe7f&chksm=804bd3e6b73c5af0f38b23376b7579b1bbf75eb4cc918227dd880978fe9d9c7e14835c0940d0&scene=21&poc_token=HK_aOWWjQWolLIigvhayAevZmBoQ7VnR98YUgnpY)
+2. [macd 指标的内在逻辑是什么？](https://www.zhihu.com/question/29954111)
+
+---
+
+prev
 
 1. MACD 及 DIF 均为正值, 可视为多头市场; MACD 及 DIF 均为负值, 可视为空头市场
 2. DIF 向上突破 MACD, 为买进讯号; DIF 向下跌破 MACD, 为卖出讯号
