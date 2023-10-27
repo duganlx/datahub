@@ -100,5 +100,7 @@ dea 是在 dif 上计算了一次均值。dif 上穿 dea 时形成金叉，根�
 
 **参考**
 
-1. [为什么骗子推荐的股票总是涨？](https://mp.weixin.qq.com/s?__biz=MzAxMjM4MTEwNg==&mid=2651704635&idx=1&sn=49048b7810552fd91f08d654bf75fe7f&chksm=804bd3e6b73c5af0f38b23376b7579b1bbf75eb4cc918227dd880978fe9d9c7e14835c0940d0&scene=21&poc_token=HK_aOWWjQWolLIigvhayAevZmBoQ7VnR98YUgnpY)
-2. [macd 指标的内在逻辑是什么？](https://www.zhihu.com/question/29954111)
+1. [【微信公众号】为什么骗子推荐的股票总是涨？](https://mp.weixin.qq.com/s?__biz=MzAxMjM4MTEwNg==&mid=2651704635&idx=1&sn=49048b7810552fd91f08d654bf75fe7f&chksm=804bd3e6b73c5af0f38b23376b7579b1bbf75eb4cc918227dd880978fe9d9c7e14835c0940d0&scene=21&poc_token=HK_aOWWjQWolLIigvhayAevZmBoQ7VnR98YUgnpY)
+2. [【知乎】macd 指标的内在逻辑是什么？](https://www.zhihu.com/question/29954111)
+3. [【富途牛牛】什么是指数平滑异同移动平均线（MACD）？](https://www.futunn.com/learn/detail-what-is-the-exponential-smoothing-moving-average-macd-63265-0)
+4. [【雪球·天街看锦】指标之王——MACD的所有用法，终于有一文完完整整明明白白讲清楚了！](https://xueqiu.com/6611881023/124133829)
