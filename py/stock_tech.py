@@ -10,7 +10,7 @@ def sma(series, window) -> pd.Series:
     return ma
 
 
-def expma(close, n):
+def expma(close, n) -> pd.Series:
     # 指数移动平均线
     expma = []
     for ele in close.array:
@@ -110,5 +110,19 @@ def kdj(close, high, low, verbose=False, wins=9) -> pd.DataFrame:
                        axis=1)
     else:
         df = pd.concat([k, d, j], axis=1)
+
+    return df
+
+
+def boll(close, wins=20, k=2) -> pd.DataFrame:
+    mid = close.rolling(window=wins).mean()
+    std = close.rolling(window=wins).std()
+    upper = mid + k * std
+    lower = mid - k * std
+
+    mid = pd.Series(mid, name='mid')
+    upper = pd.Series(upper, name='upper')
+    lower = pd.Series(lower, name='lower')
+    df = pd.concat([mid, upper, lower], axis=1)
 
     return df

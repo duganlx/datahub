@@ -3,15 +3,15 @@ import stock_tech as sta
 from dtatool import iodta
 
 df = iodta(
-  src="eam", 
-  
-  # CONF: src=eam
-  save={'ctl': True, 'dir': 'tmp', 'filename': 'xxx.csv'}, 
-  where='trade_date > \'2023-07-01\'',
-  universe=['600519.SH'],
-  
-  # CONF: src=local
-  read={'dir': 'tmp', 'filename': 'xxx.csv'},
+    src="eam",
+
+    # CONF: src=eam
+    save={'ctl': True, 'dir': 'tmp', 'filename': 'xxx.csv'},
+    # where='trade_date > \'2023-07-01\'',
+    universe=['600519.SH'],
+
+    # CONF: src=local
+    read={'dir': 'tmp', 'filename': 'xxx.csv'},
 )
 
 print(df)
@@ -20,13 +20,15 @@ print(df)
 # == data processing ==
 # sma = sta.sma(df['close'], 5)
 # macd = sta.macd(df['close'])
-kdj = sta.kdj(df['close'], df['high'], df['low'], verbose=True)
+# kdj = sta.kdj(df['close'], df['high'], df['low'], verbose=True)
+boll = sta.boll(df['close'])
 
 df = pd.concat([
     df[['trade_date']],
     # sma,
     # macd,
-    kdj
+    # kdj,
+    boll
 ], axis=1)
 print(df)
 
@@ -40,12 +42,11 @@ print(df)
 # nan_index = df['K'].index[df['K'].isna()].tolist()[0]
 # print(df.loc[nan_index-5:nan_index+5])
 
-min_index = df['J'].idxmin()
-print("[min]", df.loc[min_index])
+# min_index = df['J'].idxmin()
+# print("[min]", df.loc[min_index])
 
-max_index = df['J'].idxmax()
-print("[max]", df.loc[max_index])
+# max_index = df['J'].idxmax()
+# print("[max]", df.loc[max_index])
 
 # == value  ==
 # print('[kdj]', len(df), len(df[df['J'] > 100]), len(df[df['J'] < 0]))
-
