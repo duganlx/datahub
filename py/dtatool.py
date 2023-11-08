@@ -16,7 +16,7 @@ def _getDtabasepath():
     return dta_path
 
 
-def _fromEamApi(universe, where):
+def eamapiHandler():
     current_path = os.path.dirname(os.path.abspath(__file__))
     with open(current_path + "/config.yaml", "r") as file:
         yaml_data = yaml.load(file, Loader=yaml.FullLoader)
@@ -29,6 +29,12 @@ def _fromEamApi(universe, where):
         user=pysdk_conf['user'],
         password=pysdk_conf['password']
     )
+
+    return eamApi
+
+
+def _fromEamApi(universe, where):
+    eamApi = eamapiHandler()
 
     df = eamApi.GetData(
         db_name='dm_histdata',
