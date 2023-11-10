@@ -1,36 +1,20 @@
 import pandas as pd
-import stock_tech as sta
-from dtatool import iodta
-
-df = iodta(
-    src="eam",
-
-    # CONF: src=eam
-    save={'ctl': True, 'dir': 'tmp', 'filename': 'xxx.csv'},
-    # where='trade_date > \'2023-07-01\'',
-    universe=['600519.SH'],
-
-    # CONF: src=local
-    read={'dir': 'tmp', 'filename': 'xxx.csv'},
-)
-
-print(df)
-
+import py.stockta.ta as sta
 
 # == data processing ==
 # sma = sta.sma(df['close'], 5)
 # macd = sta.macd(df['close'])
 # kdj = sta.kdj(df['close'], df['high'], df['low'], verbose=True)
-boll = sta.boll(df['close'])
+# boll = sta.boll(df['close'])
 
-df = pd.concat([
-    df[['trade_date']],
-    # sma,
-    # macd,
-    # kdj,
-    boll
-], axis=1)
-print(df)
+# df = pd.concat([
+#     df[['trade_date']],
+#     # sma,
+#     # macd,
+#     # kdj,
+#     boll
+# ], axis=1)
+# print(df)
 
 # == date range filter ==
 # begin_date = pd.to_datetime('2023-09-01')

@@ -1,4 +1,12 @@
 py/__pycache__
+# 性能测试工具
+py/dtest/__pycache__
+# Eam pysdk工具包
+py/eampysdk/__pycache__
+# local pysdk工具包
+py/lcpysdk/__pycache__
+# stock technology analysis 工具包
+py/stockta/__pycache__
 
 # data 存放数据
 data/tmp/*
