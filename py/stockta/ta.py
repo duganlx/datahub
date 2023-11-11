@@ -247,7 +247,7 @@ class StockTA(object):
     def obv(self, offset, verbose: bool = False):
         close = self.close
         pre_close = self.pre_close
-        volume = self.volume
+        volume = self.volume / 10000 # 单位: 万手
 
         df = pd.DataFrame({'close': close, 'pre_close': pre_close, "volume": volume})
 

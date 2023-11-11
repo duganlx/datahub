@@ -103,3 +103,5 @@ BR: SUM(MAX(0, HIGH - 昨日CLOSE), N) / SUM(MAX(0, 昨日CLOSE - LOW), N) * 100
 VA := IF(CLOSE>昨日CLOSE, VOL, IF(CLOSE<昨日CLOSE, -VOL, 0))
 OBV: SUM(VA, TOTAL_BARS_COUNT)
 ```
+
+TIPS: 设置合适的偏离值可以跟富途牛牛对上
