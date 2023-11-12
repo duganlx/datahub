@@ -276,6 +276,17 @@ class StockTA(object):
 
         return pd.DataFrame({'OBV': obv, 'MAOBV': maobv})
 
+    def wr(self, n):
+        close = self.close
+        high = self.high
+        low = self.low
+
+        rhigh = high.rolling(n, min_periods=1).max()
+        rlow = low.rolling(n, min_periods=1).min()
+        wr = (rhigh - close) / (rhigh - rlow) * 100
+
+        return pd.Series(wr, name=f'WR{n}')
+
     def _rolling_df(df, window, func, name):
         """
         对Dataframe按一行为单位进行滚动, 并且生成结果Series

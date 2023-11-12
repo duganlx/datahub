@@ -105,3 +105,55 @@ OBV: SUM(VA, TOTAL_BARS_COUNT)
 ```
 
 TIPS: 设置合适的偏离值可以跟富途牛牛对上
+
+### WR
+
+威廉指数，原名为威廉超买超卖指数（Williams Overbought/Oversold Index），由瑞拉·威廉于1973年的《我如何赚取百万美元》一书中首先发表的，因此以它的名字命名。这个指标是一个振荡指标，是依股价的摆动点来度量股票是否处于超买或超卖的现象。它衡量多空双方创出的峰值（最高价）距每天收市价的距离与一定时间内的股价波动范围的比例，以提供出股市趋势反转的讯号。
+
+$$
+range\_low_i = min\{low_{i-n+1}, low_{i-n+2}, ..., low_{i}\}
+$$
+
+$$
+range\_high_i = max\{high_{i-n+1}, high_{i-n+2}, ..., high_{i}\}
+$$
+
+$$
+W\&R_i = \frac{range\_high_i - close_i}{range\_high_i - range\_low_i}
+$$
+
+### TRIX
+
+todo
+
+### CR
+
+todo
+
+### CCI
+
+todo
+
+### PSY
+
+todo
+
+### VR
+
+todo
+
+### ASI
+
+todo
+
+### SAR
+
+todo
+
+### EMV
+
+todo
+
+### ROC
+
+todo

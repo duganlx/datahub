@@ -63,9 +63,10 @@ def stockTAanalysis(df: pd.DataFrame):
     # dmi = stockTa.dmi()
     # dma = stockTa.dma()
     # brar = stockTa.brar()
-    obv = stockTa.obv(offset=32.352-815.769, verbose=True)
+    # obv = stockTa.obv(offset=32.352-815.769, verbose=True)
+    wr = stockTa.wr(n=10)
 
-    print(obv)
+    print(wr)
 
 
 if __name__ == '__main__':
