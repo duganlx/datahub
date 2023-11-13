@@ -120,20 +120,28 @@ def biclassify(generate=False):
 
     # df format
     # == begin ==
-    print(df.values)
-    # n = df.shape[0]
-    # k = 5
-    # height = n // k
+    label = df.iloc[:, -1]
+    date = df.iloc[:, 0]
+    df.drop(df.columns[[0, -1]], axis=1, inplace=True)
+
+    n = df.shape[0]
+    k = 5
+    height = n // k
     # print(n, k, height)
-    # small_dfs = np.split(df, [i * height for i in range(1, k)], axis=0)
-    # print(small_dfs)
-    # arr = np.array(small_dfs)
-    # tensor = torch.tensor(small_dfs)
+    small_dfs = np.split(df.values, [i * height for i in range(1, k)], axis=0)
+    arr = np.array(small_dfs)
+    tensor = torch.tensor(arr)
     # == end ==
-    # print(arr)
 
     # print(df)
-    # torch.nn.LSTM(input_size=38, hidden_size=20, num_layers=2, bidirectional=False)
+    rnn = torch.nn.LSTM(input_size=36, hidden_size=20, num_layers=2, bidirectional=False)
+    h0 = torch.randn(4, 5, 20) #(num_layers,batch,output_size)
+    c0 = torch.randn(4, 5, 20) #(num_layers,batch,output_size)
+    output, (hn, cn) = rnn(tensor, (h0, c0))
+
+    print(output)
+    print(hn, cn)
+
 
 if __name__ == '__main__':
     # gsfhelpConf()
@@ -142,7 +150,7 @@ if __name__ == '__main__':
 
     biclassify(generate=False)
     # rnn = torch.nn.LSTM(input_size=10, hidden_size=20, num_layers=2, bidirectional=True)
-    input = torch.randn(5, 3, 10)#(seq_len, batch, input_size)
+    # input = torch.randn(5, 3, 10)#(seq_len, batch, input_size)
     # h0 = torch.randn(4, 3, 20) #(num_layers,batch,output_size)
     # c0 = torch.randn(4, 3, 20) #(num_layers,batch,output_size)
     # output, (hn, cn) = rnn(input, (h0, c0))
