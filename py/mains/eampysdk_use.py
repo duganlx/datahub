@@ -4,6 +4,8 @@ eampysdk test
 import os
 import sys
 import pandas as pd
+import torch
+import numpy as np
 
 # 解决 ModuleNotFoundError: No module named 'xxx' 问题
 this_file_full_path_name = os.path.abspath(__file__)
@@ -49,8 +51,41 @@ def gsfhelpConf():
         public_table_sign=True
     )
 
+def adsStatementStatus():
+    """
+    对账单存续状态表
+    ads_eqw.ads_statement_status
+    """
+    eamsdk = EamPySdk()
+    data = [
+        ['au_code', 'account_name_cn', 'settle_status', 'statement_status'],
+        ['270090005318', '达复一安信', 0, 0],
+        ['666800007983', '达尔文达复合一号华泰', 1, 1],
+        ['902090000445', '达尔文达复合一号华泰信用', 1, 2],
+    ]
 
-def stockTAanalysis(df: pd.DataFrame):
+    eamsdk.uploadData(
+        table_name='test_ads_statement_status',
+        data=data,
+        primary_key=['au_code'],
+        append=True,
+        replace=True,
+        verbose=True,
+        public_table_sign=True
+    )
+
+def stockTAanalysis(local: bool = False):
+    if local:
+        lcsdk = LocalPySdk()
+        df = lcsdk.getData(dir='tmp', filename='raw.csv')
+    else:
+        eamsdk = EamPySdk()
+        df = eamsdk.getBardayData(
+            universe=['600519.SH'],
+            # where='trade_date > \'2023-07-01\''
+        )
+        # eamsdk.savedf(df, dir='tmp', filename='raw.csv')
+
     stockTa = StockTA(df)
 
     # ma = stockTa.ma(5)
@@ -68,20 +103,49 @@ def stockTAanalysis(df: pd.DataFrame):
 
     print(wr)
 
-
-if __name__ == '__main__':
-    local = True
-
-    if local:
-        lcsdk = LocalPySdk()
-        df = lcsdk.getData(dir='tmp', filename='raw.csv')
-    else:
+def biclassify(generate=False):
+    if generate:
         eamsdk = EamPySdk()
         df = eamsdk.getBardayData(
             universe=['600519.SH'],
-            # where='trade_date > \'2023-07-01\''
+            where='trade_date > \'2023-07-01\''
         )
-        df = eamsdk.savedf(df, dir='tmp', filename='raw.csv')
+        stockTa = StockTA(df)
+        dmatrix = stockTa.data_matrix()
+        eamsdk.savedf(df=dmatrix, dir='tmp', filename='ta.csv')
+        df = dmatrix
+    else:
+        lcsdk = LocalPySdk()
+        df = lcsdk.getData(dir='tmp', filename='ta.csv')
 
+    # df format
+    # == begin ==
+    print(df.values)
+    # n = df.shape[0]
+    # k = 5
+    # height = n // k
+    # print(n, k, height)
+    # small_dfs = np.split(df, [i * height for i in range(1, k)], axis=0)
+    # print(small_dfs)
+    # arr = np.array(small_dfs)
+    # tensor = torch.tensor(small_dfs)
+    # == end ==
+    # print(arr)
+
+    # print(df)
+    # torch.nn.LSTM(input_size=38, hidden_size=20, num_layers=2, bidirectional=False)
+
+if __name__ == '__main__':
     # gsfhelpConf()
-    stockTAanalysis(df)
+    # adsStatementStatus()
+    # stockTAanalysis(local=False)
+
+    biclassify(generate=False)
+    # rnn = torch.nn.LSTM(input_size=10, hidden_size=20, num_layers=2, bidirectional=True)
+    input = torch.randn(5, 3, 10)#(seq_len, batch, input_size)
+    # h0 = torch.randn(4, 3, 20) #(num_layers,batch,output_size)
+    # c0 = torch.randn(4, 3, 20) #(num_layers,batch,output_size)
+    # output, (hn, cn) = rnn(input, (h0, c0))
+
+    # print(output)
+    # print(hn, cn)

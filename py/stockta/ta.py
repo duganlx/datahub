@@ -19,13 +19,15 @@ class StockTA(object):
         self.pre_close = df['pre_close']
         self.volume = df['total_vol'] / 100  # 1手 = 100股
 
-    def ma(self, window) -> pd.Series:
+    def ma(self, wins, prod=False) -> pd.Series:
         close = self.close
-        ma = close.rolling(window=window).mean()
-        ma.name = f'MA{window}'
+        ma = close.rolling(window=wins).mean()
+        ma.name = f'MA{wins}'
+        if prod:
+            ma.name = f'ma_MA{wins}'
         return ma
 
-    def expma(self, n) -> pd.Series:
+    def expma(self, n, prod=False) -> pd.Series:
         close = self.close
         expma = []
         for ele in close.array:
@@ -40,9 +42,11 @@ class StockTA(object):
             expma.append(cur_expma)
 
         expma = pd.Series(expma, name=f'EXPMA{n}')
+        if prod:
+            expma = pd.Series(expma, name=f'expma_EMA{n}')
         return expma
 
-    def macd(self) -> pd.DataFrame:
+    def macd(self, prod=False) -> pd.DataFrame:
         close = self.close
         ema12, ema26 = [], []
         for ele in close.array:
@@ -76,9 +80,16 @@ class StockTA(object):
         macd = pd.Series((dif - dea) * 2, name='MACD')
 
         df = pd.concat([dif, dea, macd], axis=1)
+        if prod: 
+            df = pd.concat([
+                pd.Series(dif, name='macd_DIF'),
+                pd.Series(dea, name='macd_DEA'),
+                pd.Series(macd, name='macd_MACD'),
+            ], axis=1)
+
         return df
 
-    def kdj(self, wins=9) -> pd.DataFrame:
+    def kdj(self, wins=9, prod=False) -> pd.DataFrame:
         close = self.close
         high = self.high
         low = self.low
@@ -116,10 +127,15 @@ class StockTA(object):
         d = pd.Series(d, name='D')
         j = pd.Series(j, name='J')
 
+        if prod: 
+            k = pd.Series(k, name='kdj_K')
+            d = pd.Series(d, name='kdj_D')
+            j = pd.Series(j, name='kdj_J')
+
         df = pd.concat([k, d, j], axis=1)
         return df
 
-    def boll(self, wins=20, k=2) -> pd.DataFrame:
+    def boll(self, wins=20, k=2, prod=False) -> pd.DataFrame:
         close = self.close
         mid = close.rolling(window=wins).mean()
         std = close.rolling(window=wins).std()
@@ -129,19 +145,26 @@ class StockTA(object):
         mid = pd.Series(mid, name='mid')
         upper = pd.Series(upper, name='upper')
         lower = pd.Series(lower, name='lower')
+        if prod: 
+            mid = pd.Series(mid, name='boll_MID')
+            upper = pd.Series(upper, name='boll_UPPER')
+            lower = pd.Series(lower, name='boll_LOWER')
+
         df = pd.concat([mid, upper, lower], axis=1)
         return df
 
-    def mtm(self, n=6, m=6):
+    def mtm(self, n=6, m=6, prod=False):
         # 动量指标
         close = self.close
         mtm = close - close.shift(n)
         mtmma = mtm.rolling(m).mean()
 
         df = pd.DataFrame({'MTM': mtm, 'MTMMA': mtmma})
+        if prod: 
+            df = pd.DataFrame({'mtm_MTM': mtm, 'mtm_MTMMA': mtmma})
         return df
     
-    def rsi(self, periods=6):
+    def rsi(self, periods=6, prod=False):
         close = self.close
         length = len(close)
         rsi = [np.nan] * length
@@ -174,9 +197,11 @@ class StockTA(object):
             down_avg = (down_avg * (periods - 1) + down) / periods
             rsi[j] = up_avg / (up_avg + down_avg) * 100
 
+        if prod:
+            return pd.Series(rsi, name=f'rsi_RSI{periods}')
         return pd.Series(rsi, name=f'RSI{periods}')
 
-    def dmi(self, n=14, m=6):
+    def dmi(self, n=14, m=6, prod=False):
         close = self.close
         high = self.high
         low = self.low
@@ -213,18 +238,23 @@ class StockTA(object):
         a = adx
         b = adx.shift(m)
         adxr = (a + b) / 2
+
+        if prod: 
+            return pd.DataFrame({'dmi_PDI': pdi, 'dmi_MDI': mdi, 'dmi_ADX': adx, 'dmi_ADXR': adxr})
         return pd.DataFrame({'PDI': pdi, 'MDI': mdi, 'ADX': adx, 'ADXR': adxr})
 
-    def dma(self, short=10, long=50, m=10):
+    def dma(self, short=10, long=50, m=10, prod=False):
         close = self.close
         short_ma = close.rolling(short, min_periods=1).mean()
         long_ma = close.rolling(long, min_periods=1).mean()
         ddd = short_ma - long_ma
         ama = ddd.rolling(m, min_periods=1).mean()
 
+        if prod:
+            return pd.DataFrame({'dma_DDD': ddd, 'dma_AMA': ama})
         return pd.DataFrame({'DDD': ddd, 'AMA': ama})
 
-    def brar(self, n=26):
+    def brar(self, n=26, prod=False):
         open = self.open
         close = self.close
         high = self.high
@@ -242,9 +272,11 @@ class StockTA(object):
         b = pd.Series(b).rolling(n).sum()
         br = a / b * 100
 
+        if prod:
+            return pd.DataFrame({'brar_AR': ar, 'brar_BR': br})
         return pd.DataFrame({'AR': ar, 'BR': br})
 
-    def obv(self, offset, verbose: bool = False):
+    def obv(self, offset, verbose:bool=False, prod=False):
         close = self.close
         pre_close = self.pre_close
         volume = self.volume / 10000 # 单位: 万手
@@ -274,9 +306,11 @@ class StockTA(object):
         if verbose:
             return pd.DataFrame({'trade_date': self.trade_date, 'close': close, 'pre_close': pre_close, 'volume': volume ,'OBV': obv, 'MAOBV': maobv})
 
+        if prod:
+            return pd.DataFrame({'obv_OBV': obv, 'obv_MAOBV': maobv})
         return pd.DataFrame({'OBV': obv, 'MAOBV': maobv})
 
-    def wr(self, n):
+    def wr(self, n, prod=False):
         close = self.close
         high = self.high
         low = self.low
@@ -285,7 +319,54 @@ class StockTA(object):
         rlow = low.rolling(n, min_periods=1).min()
         wr = (rhigh - close) / (rhigh - rlow) * 100
 
+        if prod:
+            return pd.Series(wr, name=f'w&r_WR{n}')
         return pd.Series(wr, name=f'WR{n}')
+
+    def data_matrix(self):
+        date = pd.Series(self.trade_date, name='date')
+        open = pd.Series(self.open, name='open')
+        close = pd.Series(self.close, name='close')
+        high = pd.Series(self.high, name='high')
+        low = pd.Series(self.low, name='low')
+        volume = pd.Series(self.volume, name='volume')
+        ma5 = self.ma(wins=5, prod=True)
+        ma10 = self.ma(wins=10, prod=True)
+        ma20 = self.ma(wins=20, prod=True)
+        ma60 = self.ma(wins=60, prod=True)
+        ema5 = self.expma(n=5, prod=True)
+        ema10 = self.expma(n=10, prod=True)
+        ema20 = self.expma(n=20, prod=True)
+        ema60 = self.expma(n=60, prod=True)
+        macd = self.macd(prod=True)
+        kdj = self.kdj(prod=True)
+        boll = self.boll(prod=True)
+        rsi = self.rsi(prod=True)
+        dmi = self.dmi(prod=True)
+        dma = self.dma(prod=True)
+        brar = self.brar(prod=True)
+        obv = self.obv(offset=32.352-815.769, prod=True)
+        wr = self.wr(n=10, prod=True)
+        mtm = self.mtm(prod=True)
+
+        bilabel = pd.Series(self.close > self.pre_close, name='bilabel')
+
+        df = pd.concat([
+            # basic(6)
+            date, open, close, high, low, volume,
+            # MA(4)
+            ma5, ma10, ma20, ma60,
+            # EMA(4)
+            ema5, ema10, ema20, ema60,
+            # MACD(3), KDJ(3), BOLL(3), RSI(1), DMI(4), DMA(2), BRAR(2)
+            macd, kdj, boll, rsi, dmi, dma, brar,
+            # OBV(2), WR(1), MTM(2)
+            obv, wr, mtm,
+            # 二分类标签 涨:True, 跌:False
+            bilabel
+        ], axis=1)
+
+        return df
 
     def _rolling_df(df, window, func, name):
         """
