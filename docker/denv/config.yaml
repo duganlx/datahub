@@ -1,0 +1,13 @@
+basic:
+  download: /download
+  workspace: /workspace
+  share: /share
+node16:
+  name: envjs16
+  tag: v1
+node18:
+  name: envjs18
+  tag: v1
+golang18:
+  name: envgo18
+  tag: v1
