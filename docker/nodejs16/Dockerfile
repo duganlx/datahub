@@ -7,6 +7,7 @@ SHELL ["/bin/bash", "-c"]
 ENV DOWNLOAD_DIR=/download
 ENV WORKSPACE_DIR=/workspace
 ENV SHARE_DIR=/share
+ENV LANG=C.UTF-8
 
 RUN mkdir ${DOWNLOAD_DIR} ${WORKSPACE_DIR}
 RUN apt-get update

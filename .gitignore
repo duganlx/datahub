@@ -11,3 +11,6 @@ py/stockta/__pycache__
 # data 存放数据
 data/tmp/*
 !data/tmp/README.md
+
+# docker
+!docker/go18/src/download.sh

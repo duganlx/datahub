@@ -6,10 +6,12 @@ SHELL ["/bin/bash", "-c"]
 ENV DOWNLOAD_DIR=/download
 ENV WORKSPACE_DIR=/workspace
 ENV SHARE_DIR=/share
+ENV LANG=C.UTF-8
 
 RUN mkdir ${DOWNLOAD_DIR} ${WORKSPACE_DIR}
 RUN apt-get update
 RUN apt-get install -y vim net-tools iputils-ping wget git
+RUN apt-get install -y autoconf automake libtool curl make g++ unzip
 
 # 安装: golang -> https://golang.google.cn/dl/
 # == begin ==

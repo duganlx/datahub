@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IMAGE_NAME=go18
+IMAGE_NAME=devgo18
 IMAGE_TAG=v1
 
 # 删除原先的容器
