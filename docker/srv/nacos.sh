@@ -1,23 +1,54 @@
 #!/bin/bash
 # nacos文档: https://nacos.io/zh-cn/docs/quick-start.html
 
-log_dir=/root/github/nacos/logs/
-conf_dir=/root/github/nacos/conf/
+script_dir=$(dirname "$(readlink -f "$0")")
+nacos_conf_dir=$script_dir/dta/nacos
+log_dir=$script_dir/dta/nacos/logs/
+conf_dir=$script_dir/dta/nacos/conf/
 
-# 启动容器
-# == begin ==
-docker run -d --name tmp -p 8848:8848 nacos/nacos-server
-docker cp tmp:/home/nacos/logs/ /root/github/nacos/logs/
-docker cp tmp:/home/nacos/conf/ /root/github/nacos/conf/
-docker rm -f tmp
-docker run -d --name nacos \
-  -p 8848:8848 -p 9848:9848 -p 9849:9849 --privileged=true \
-  -e JVM_XMS=256m -e JVM_XMX=256m -e MODE=standalone \
-  -v /root/github/nacos/logs/:/home/nacos/logs/ \
-  -v /root/github/nacos/conf/:/home/nacos/conf/ \
-  --restart=always nacos/nacos-server
-# == end ==
+echo -e "操作引导:\n0 [拉取镜像]\n1 [初始化]\n2 [创建容器]"
+read -p "选择进行的操作: " op
 
-# [info] 在mysql的数据库 nacosconf 执行脚本 conf/mysql-schema.sql
-# [info] 在 conf/application.properties 中修改数据库配置 {spring.sql.init.platform: mysql, db.num: 1, db.url.0: {MYSQL_SERVICE_HOST: 192.168.15.42, MYSQL_SERVICE_PORT: 3306, MYSQL_SERVICE_DB_NAME: nacosconf}, db.user.0: root, db.password.0: root}
-# [info] http://192.168.15.42:8848/nacos/index.html
+case $op in
+  0)
+    # 拉去镜像
+    docker pull nacos/nacos-server
+    ;;
+  1)
+    # 初始化 nacos
+    mkdir -p $log_dir $conf_dir
+    docker run -d --name tmp nacos/nacos-server
+    docker cp tmp:/home/nacos/logs/ $nacos_conf_dir
+    docker cp tmp:/home/nacos/conf/ $nacos_conf_dir
+    docker rm -f tmp
+
+    # 后续操作
+    # [info] 在mysql的数据库 nacosconf 执行脚本 conf/mysql-schema.sql
+    # [info] 在 conf/application.properties 中修改数据库配置 如下
+    # {
+    #   spring.sql.init.platform: mysql, 
+    #   db.num: 1, 
+    #   db.url.0: {MYSQL_SERVICE_HOST: 192.168.15.42, MYSQL_SERVICE_PORT: 3306, MYSQL_SERVICE_DB_NAME: nacosconf}, 
+    #   db.user.0: root, 
+    #   db.password.0: root
+    # }
+    ;;
+  2)
+    # 创建容器
+    # --restart=always
+    docker run -d --name nacos --privileged=true \
+      -p 8848:8848 -p 9848:9848 -p 9849:9849 \
+      -e JVM_XMS=256m -e JVM_XMX=256m -e MODE=standalone \
+      -v $log_dir:/home/nacos/logs/ \
+      -v $conf_dir:/home/nacos/conf/ \
+      nacos/nacos-server
+    
+    # nacos访问: http://192.168.15.42:8848/nacos/index.html
+    ;;
+  *)
+    echo "输入无效"
+    exit 1
+    ;;
+esac
+
+

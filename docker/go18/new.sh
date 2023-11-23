@@ -32,7 +32,6 @@ docker cp inrun.sh $container_name:/download
 docker exec -it $container_name /bin/bash -c 'chmod 750 /download/inrun.sh'
 
 script_dir=$(dirname "$(readlink -f "$0")")
-echo $script_dir
 read -p "是否自行下载protoc-22.2-linux-x86_64.zip, 请输入(y/n): " op
 if [ "$op" == "y" ]; then
   if [ ! -e "$script_dir/src/protoc-22.2-linux-x86_64.zip" ]; then

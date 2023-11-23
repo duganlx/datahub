@@ -13,4 +13,7 @@ data/tmp/*
 !data/tmp/README.md
 
 # docker
+docker/go18/src/*
 !docker/go18/src/download.sh
+docker/srv/dta/*
+!docker/srv/dta/README.md
