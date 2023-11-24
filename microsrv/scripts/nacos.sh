@@ -2,9 +2,10 @@
 # nacos文档: https://nacos.io/zh-cn/docs/quick-start.html
 
 script_dir=$(dirname "$(readlink -f "$0")")
-nacos_conf_dir=$script_dir/dta/nacos
-log_dir=$script_dir/dta/nacos/logs/
-conf_dir=$script_dir/dta/nacos/conf/
+microsrv_dir="$(dirname "${script_path}")"
+nacos_conf_dir=$microsrv_dir/tmp/nacos
+log_dir=$microsrv_dir/tmp/nacos/logs/
+conf_dir=$microsrv_dir/tmp/nacos/conf/
 
 echo -e "操作引导:\n0 [拉取镜像]\n1 [初始化]\n2 [创建容器]"
 read -p "选择进行的操作: " op

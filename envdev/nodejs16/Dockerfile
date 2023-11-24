@@ -34,7 +34,6 @@ RUN echo 'set encoding=prc' >> /root/.vimrc
 # == end ==
 
 # 解决: 终端不允许输入中文问题
-# todo 删除时仍然是单字节删除，所以汉字需要两次删除键
 # == begin ==
 RUN cd /root && touch .inputrc
 RUN echo 'set meta-flag on' >> /root/.inputrc
