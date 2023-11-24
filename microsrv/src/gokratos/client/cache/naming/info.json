@@ -1,0 +1,30 @@
+{
+  "dom": "",
+  "cacheMillis": 10000,
+  "useSpecifiedUrl": false,
+  "hosts": [
+    {
+      "valid": false,
+      "marked": false,
+      "instanceId": "ip地址#9000#集群名称#分组名称@@服务名.服务类型",
+      "port": "端口号",
+      "ip": "ip地址",
+      "weight": "权重",
+      "metadata": {
+        "kind": "grpc",
+        "version": ""
+      },
+      "clusterName": "集群名称",
+      "serviceName": "group1@@srv1.grpc",
+      "enabled": true,
+      "healthy": true,
+      "ephemeral": true
+    }
+  ],
+  "checksum": "",
+  "lastRefTime": 1700812519229,
+  "env": "",
+  "clusters": "DEFAULT",
+  "metadata": null,
+  "name": "group1@@srv1.grpc"
+}

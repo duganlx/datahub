@@ -11,7 +11,7 @@ ENV LANG=C.UTF-8
 RUN mkdir ${DOWNLOAD_DIR} ${WORKSPACE_DIR}
 RUN apt-get update
 RUN apt-get install -y vim net-tools iputils-ping wget git
-RUN apt-get install -y autoconf automake libtool curl make g++ unzip
+RUN apt-get install -y autoconf automake libtool curl make g++ unzip telnet
 
 # 安装: golang -> https://golang.google.cn/dl/
 # == begin ==

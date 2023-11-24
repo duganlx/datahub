@@ -1,8 +1,8 @@
-# 分布式 & 微服务
+# 微服务
 
 实验
 
-srv
+kratos 客户端如果生成了 cache，那么重新执行将出现报错 `rpc error: code = DeadlineExceeded desc = context deadline exceeded`
 
 文献
 

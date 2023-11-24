@@ -17,3 +17,12 @@ docker/go18/src/*
 !docker/go18/src/download.sh
 docker/srv/dta/*
 !docker/srv/dta/README.md
+
+microsrv/tmp/*
+!microsrv/tmp/README.md
+microsrv/src/gokratos/client/log
+microsrv/src/gokratos/server/log
+microsrv/src/gokratos/client/cache/naming/*
+!microsrv/src/gokratos/client/cache/naming/info.json
+microsrv/src/gokratos/server/cache/config/*
+!microsrv/src/gokratos/server/cache/config/info.json
