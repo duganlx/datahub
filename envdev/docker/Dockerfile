@@ -22,7 +22,7 @@ RUN echo '# deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main 
 RUN echo '# # deb-src http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse' >> /etc/apt/sources.list
 
 # 安装: 常用命令
-RUN apt-get update && apt-get install -y vim net-tools iputils-ping wget git
+RUN apt-get update && apt-get install -y vim net-tools iputils-ping wget git unzip telnet
 
 # 解决: 终端删除中文字符需要两次delete操作问题
 ENV LANG=C.UTF-8
@@ -43,3 +43,5 @@ RUN echo 'set encoding=prc' >> /root/.vimrc
 
 # 开发配置
 RUN mkdir /download /workspace
+
+WORKDIR /workspace

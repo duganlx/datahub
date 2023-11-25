@@ -1,3 +1,5 @@
+.vscode
+
 py/__pycache__
 # 性能测试工具
 py/dtest/__pycache__
@@ -12,12 +14,15 @@ py/stockta/__pycache__
 data/tmp/*
 !data/tmp/README.md
 
-# docker
-docker/go18/src/*
-!docker/go18/src/download.sh
-docker/srv/dta/*
-!docker/srv/dta/README.md
+# env dev
+envdev/go18/src/*
+!envdev/go18/src/download.sh
+envdev/srv/dta/*
+!envdev/srv/dta/README.md
+envdev/tmp/*
+!envdev/tmp/README.md
 
+# micro server
 microsrv/tmp/*
 !microsrv/tmp/README.md
 microsrv/src/gokratos/client/log
