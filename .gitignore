@@ -1,5 +1,3 @@
-.vscode
-
 py/__pycache__
 # 性能测试工具
 py/dtest/__pycache__

@@ -3,5 +3,8 @@
     "editor.defaultFormatter": "ms-python.autopep8"
   },
   "python.formatting.provider": "none",
-  "python.analysis.autoImportCompletions": false
+  "python.analysis.autoImportCompletions": false,
+  "files.associations": {
+    "**/Dockerfile*": "dockerfile"
+}
 }

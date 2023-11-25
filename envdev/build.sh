@@ -33,7 +33,7 @@ case $opt in
       done
     fi
 
-    docker build -t $BASIC_IMAGE_NAME:$BASIC_IMAGE_TAG -f docker/Dockerfile .
+    docker build -t $BASIC_IMAGE_NAME:$BASIC_IMAGE_TAG -f Dockerfile .
   ;;
   1)
     read -p "请输入容器名称: " container_name
@@ -233,9 +233,15 @@ EOT
       docker rm -f $container_name
     fi
 
-    docker pull mysql:8
+    if ! docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "mysql:8"; then
+      docker pull mysql:8
+    fi
+
     docker run -d --name $container_name -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root mysql:8
-    docker exec -it $container_name /bin/bash -c "mysql -u root -p root -e 'ALTER USER \'root\'@\'%\' IDENTIFIED WITH mysql_native_password BY \'root\''"
+    echo -e "mysql容器$container_name 创建完成, 还需要进行如下配置:"
+    echo -e "\n\tdocker exec -it mydb /bin/bash"
+    echo -e "\tmysql -u root -p <enter> root"
+    echo -e "\tALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';\n"
   ;;
   *)
     echo "输入无效"
