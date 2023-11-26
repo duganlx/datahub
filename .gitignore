@@ -7,10 +7,11 @@ envdev/tmp/*
 
 # 数学研究 mathstudy
 mathstudy/__pycache__
+mathstudy/utils/__pycache__
 
 # 微服务 micro server
-microsrv/tmp/*
-!microsrv/tmp/README.md
+microsrv/src/nacosconf/*
+!microsrv/src/nacosconf/README.md
 microsrv/src/gokratos/client/log
 microsrv/src/gokratos/server/log
 microsrv/src/gokratos/client/cache/naming/*

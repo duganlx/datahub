@@ -68,18 +68,17 @@ case $opt in
     read -p "请输入容器$container_name 的端口映射配置(空格分隔): " ports_map
     port_map_array=($ports_map)
     
-    container_wsdir=$TMP_DIR/workspace/$container_name
-    mkdir -p $container_wsdir
-    
     docker_run_cmd="docker run -itd --name $container_name --privileged=true"
     for port_map in ${port_map_array[@]}; do
       docker_run_cmd="$docker_run_cmd -p $port_map"
     done
 
     # /workspace 挂载位置选择
+    container_wsdir=$TMP_DIR/workspace/$container_name
     read -p "容器工作目录(/workspace)是否挂载在默认位置($container_wsdir)，请输入(y/n): " mountwsopt
     case $mountwsopt in
       y)
+        mkdir -p $container_wsdir
         docker_run_cmd="$docker_run_cmd -v $container_wsdir:/workspace"
       ;;
       n)
@@ -275,18 +274,17 @@ EOT
     read -p "请输入容器$container_name 的端口映射配置(空格分隔): " ports_map
     port_map_array=($ports_map)
 
-    container_wsdir=$TMP_DIR/workspace/$container_name
-    mkdir -p $container_wsdir
-
     docker_run_cmd="docker run -itd --name $container_name --privileged=true"
     for port_map in ${port_map_array[@]}; do
       docker_run_cmd="$docker_run_cmd -p $port_map"
     done
     
     # /workspace 挂载位置选择
+    container_wsdir=$TMP_DIR/workspace/$container_name
     read -p "容器工作目录(/workspace)是否挂载在默认位置($container_wsdir)，请输入(y/n): " mountwsopt
     case $mountwsopt in
       y)
+        mkdir -p $container_wsdir
         docker_run_cmd="$docker_run_cmd -v $container_wsdir:/workspace"
       ;;
       n)

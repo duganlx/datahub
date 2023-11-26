@@ -17,6 +17,11 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/vo"
 )
 
+var (
+	NacosIp          = "192.168.0.104"
+	NacosNamespaceId = "2fe77cf0-7920-4405-82e6-bea518447a2f"
+)
+
 func main() {
 	opt := "nacos"
 
@@ -76,14 +81,14 @@ func simpleRpc() {
 
 func nacosRpc() {
 	sc := []constant.ServerConfig{
-		*constant.NewServerConfig("192.168.15.42", 8848),
+		*constant.NewServerConfig(NacosIp, 8848),
 	}
 
 	cc := constant.ClientConfig{
-		NamespaceId:          "933cbb87-3f11-44f5-b1be-f7537092d195",
-		TimeoutMs:            5000,
-		AppName:              "client1",
-		Endpoint:             "192.168.15.42:8848",
+		NamespaceId: NacosNamespaceId,
+		TimeoutMs:   5000,
+		AppName:     "client1",
+		// Endpoint:             "192.168.15.42:8848",
 		OpenKMS:              false,
 		LogDir:               "./log",
 		LogLevel:             "debug",

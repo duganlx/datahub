@@ -2,19 +2,19 @@
 # nacos文档: https://nacos.io/zh-cn/docs/quick-start.html
 
 script_dir=$(dirname "$(readlink -f "$0")")
-microsrv_dir="$(dirname "${script_path}")"
-nacos_conf_dir=$microsrv_dir/tmp/nacos
-log_dir=$microsrv_dir/tmp/nacos/logs/
-conf_dir=$microsrv_dir/tmp/nacos/conf/
+# microsrv_dir="$(dirname "${script_path}")"
+nacos_conf_dir=$script_dir/src/nacosconf
+log_dir=$script_dir/src/nacosconf/logs/
+conf_dir=$script_dir/src/nacosconf/conf/
 
-echo -e "操作引导:\n0 [拉取镜像]\n1 [初始化]\n2 [创建容器]"
+echo -e "操作引导:\n0 [拉取镜像]\n1 [环境初始化]\n2 [创建容器]"
 read -p "选择进行的操作: " op
 
 case $op in
   0)
-    # 拉去镜像
+    # 拉取镜像
     docker pull nacos/nacos-server
-    ;;
+  ;;
   1)
     # 初始化 nacos
     mkdir -p $log_dir $conf_dir
@@ -33,11 +33,17 @@ case $op in
     #   db.user.0: root, 
     #   db.password.0: root
     # }
-    ;;
+  ;;
   2)
     # 创建容器
     # --restart=always
-    docker run -d --name nacos --privileged=true \
+    container_name=nacos
+    if docker ps -a --format '{{.Names}}' | grep -q $container_name; then
+      read -p "容器$container_name 已存在, 按回车键将进行删除..."
+      docker rm -f $container_name
+    fi
+
+    docker run -d --name $container_name --privileged=true \
       -p 8848:8848 -p 9848:9848 -p 9849:9849 \
       -e JVM_XMS=256m -e JVM_XMX=256m -e MODE=standalone \
       -v $log_dir:/home/nacos/logs/ \
@@ -45,11 +51,11 @@ case $op in
       nacos/nacos-server
     
     # nacos访问: http://192.168.15.42:8848/nacos/index.html
-    ;;
+  ;;
   *)
     echo "输入无效"
     exit 1
-    ;;
+  ;;
 esac
 
 
