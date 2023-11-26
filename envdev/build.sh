@@ -18,6 +18,7 @@ cat <<EOF
   4 [生成nodejs镜像] - Deprecated 
   5 [生成nodejs容器]
   6 [生成mysql容器]
+  7 [生成python容器]
 EOF
 read -p "选择进行的操作: " opt
 
@@ -243,6 +244,47 @@ EOT
     echo -e "\tmysql -u root -p <enter> root"
     echo -e "\tALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';\n"
   ;;
+  7)
+    # 生成 python 开发环境 - miniconda
+    # 生成basic容器
+    # == begin ==
+    read -p "请输入容器名称: " container_name
+    if docker ps -a --format '{{.Names}}' | grep -q $container_name; then
+      read -p "容器$container_name 已存在, 按回车键将进行删除..."
+      docker rm -f $container_name
+    fi
+    read -p "请输入容器$container_name 的端口映射配置(空格分隔): " ports_map
+    port_map_array=($ports_map)
+
+    container_wsdir=$TMP_DIR/workspace/$container_name
+    mkdir -p $container_wsdir
+
+    docker_run_cmd="docker run -itd --name $container_name --privileged=true"
+    for port_map in ${port_map_array[@]}; do
+      docker_run_cmd="$docker_run_cmd -p $port_map"
+    done
+    docker_run_cmd="$docker_run_cmd -v $container_wsdir:/workspace"
+    docker_run_cmd="$docker_run_cmd -v /root/.ssh:/root/.ssh"
+    docker_run_cmd="$docker_run_cmd $BASIC_IMAGE_NAME:$BASIC_IMAGE_TAG /bin/bash"
+
+    echo -e "将执行的命令如下所示\n\n\t$docker_run_cmd\n"
+    read -p "按回车键开始执行该命令创建容器..."
+    $docker_run_cmd
+    # == end ==
+
+    # 资源准备
+    download_dir=$TMP_DIR/download/py
+    condash="Miniconda3-latest-Linux-x86_64.sh"
+    mkdir -p $download_dir
+    if [ ! -e "$download_dir/$condash" ]; then
+      wget -P "$download_dir" "https://repo.anaconda.com/miniconda/$condash"
+    fi
+
+    docker cp $download_dir/$condash $container_name:/download
+    docker exec -it $container_name /bin/bash -c "chmod 750 /download/$condash"
+    docker exec -it $container_name /bin/bash -c "bash /download/$condash -b -p /usr/local/miniconda"
+    docker exec -it $container_name /bin/bash -c "echo 'export PATH=\$PATH:/usr/local/miniconda/bin' >> /root/.bashrc"
+  ;;
   *)
     echo "输入无效"
     exit 1
@@ -273,7 +315,7 @@ fi
 # 进入容器命令
 # == begin ==
 found=false
-create_container_opts=(1 3 5)
+create_container_opts=(1 3 5 7)
 for num in "${create_container_opts[@]}"
 do
   if [ "$num" -eq $opt ]; then

@@ -2,7 +2,7 @@
 
 开发的基础环境搭建
 
-# go-kratos 开发
+## go-kratos 开发
 
 go-kratos 文档: https://go-kratos.dev/docs/
 
@@ -15,4 +15,11 @@ vscode 若不能将 docker目录下的文件当作 Dockerfile，请将以下代�
 "files.associations": {
   "**/Dockerfile*": "dockerfile"
 }
+```
+
+## python-miniconda 开发
+
+conda 常用命令
+```bash
+conda env list
 ```
