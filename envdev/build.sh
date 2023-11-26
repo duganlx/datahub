@@ -1,10 +1,11 @@
 #!/bin/bash
 #
 # Author: lvx
-# Date: 2023-11-25
+# Date: 2023-11-26
 # Description: 搭建开发环境的 Main 程序
 
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+ROOT_DIR=$(dirname $SCRIPT_DIR)
 TMP_DIR=$SCRIPT_DIR/tmp
 BASIC_IMAGE_NAME=devbasic
 BASIC_IMAGE_TAG=v1.0.0
@@ -24,6 +25,7 @@ read -p "选择进行的操作: " opt
 
 case $opt in
   0)
+    # 生成basic镜像
     # 有三种情况: 1. 无镜像; 2. 有镜像无容器; 3. 有镜像有容器
     container_ids=$(docker ps -q --filter ancestor="$BASIC_IMAGE_NAME:$BASIC_IMAGE_TAG")
     if [ -n "$container_ids" ]; then
@@ -37,6 +39,7 @@ case $opt in
     docker build -t $BASIC_IMAGE_NAME:$BASIC_IMAGE_TAG -f Dockerfile .
   ;;
   1)
+    # 生成basic容器
     read -p "请输入容器名称: " container_name
     if docker ps -a --format '{{.Names}}' | grep -q $container_name; then
       read -p "容器$container_name 已存在, 按回车键将进行删除..."
@@ -72,7 +75,23 @@ case $opt in
     for port_map in ${port_map_array[@]}; do
       docker_run_cmd="$docker_run_cmd -p $port_map"
     done
-    docker_run_cmd="$docker_run_cmd -v $container_wsdir:/workspace"
+
+    # /workspace 挂载位置选择
+    read -p "容器工作目录(/workspace)是否挂载在默认位置($container_wsdir)，请输入(y/n): " mountwsopt
+    case $mountwsopt in
+      y)
+        docker_run_cmd="$docker_run_cmd -v $container_wsdir:/workspace"
+      ;;
+      n)
+        read -p "请输入挂载位置: $ROOT_DIR/" mountwspath
+        docker_run_cmd="$docker_run_cmd -v $ROOT_DIR/$mountwspath:/workspace"
+      ;;
+      *)
+        echo "输入无效"
+        exit 1
+      ;;
+    esac
+    
     docker_run_cmd="$docker_run_cmd -v /root/.ssh:/root/.ssh"
     docker_run_cmd="$docker_run_cmd $BASIC_IMAGE_NAME:$BASIC_IMAGE_TAG /bin/bash"
 
@@ -263,7 +282,23 @@ EOT
     for port_map in ${port_map_array[@]}; do
       docker_run_cmd="$docker_run_cmd -p $port_map"
     done
-    docker_run_cmd="$docker_run_cmd -v $container_wsdir:/workspace"
+    
+    # /workspace 挂载位置选择
+    read -p "容器工作目录(/workspace)是否挂载在默认位置($container_wsdir)，请输入(y/n): " mountwsopt
+    case $mountwsopt in
+      y)
+        docker_run_cmd="$docker_run_cmd -v $container_wsdir:/workspace"
+      ;;
+      n)
+        read -p "请输入挂载位置: $ROOT_DIR/" mountwspath
+        docker_run_cmd="$docker_run_cmd -v $ROOT_DIR/$mountwspath:/workspace"
+      ;;
+      *)
+        echo "输入无效"
+        exit 1
+      ;;
+    esac
+
     docker_run_cmd="$docker_run_cmd -v /root/.ssh:/root/.ssh"
     docker_run_cmd="$docker_run_cmd $BASIC_IMAGE_NAME:$BASIC_IMAGE_TAG /bin/bash"
 
