@@ -9,10 +9,10 @@ import time
 
 # 解决 ModuleNotFoundError: No module named 'dtest' 问题
 # 需要将dtest的路径添加到环境变量之中
-this_file_full_path_name = os.path.abspath(__file__)
-this_file_folder_path = os.path.dirname(this_file_full_path_name)
-parent_folder_path = os.path.dirname(this_file_folder_path)
-sys.path.append(parent_folder_path)
+# this_file_full_path_name = os.path.abspath(__file__)
+# this_file_folder_path = os.path.dirname(this_file_full_path_name)
+# parent_folder_path = os.path.dirname(this_file_folder_path)
+# sys.path.append(parent_folder_path)
 
 from dtest.actuator import Master, Task
 from dtest.supporter import Constant

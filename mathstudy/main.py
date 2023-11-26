@@ -13,9 +13,9 @@ this_file_folder_path = os.path.dirname(this_file_full_path_name)
 parent_folder_path = os.path.dirname(this_file_folder_path)
 sys.path.append(parent_folder_path)
 
-from eampysdk.index import EamPySdk
-from lcpysdk.index import LocalPySdk
-from stockta.ta import StockTA
+from utils.eampysdk import EamPySdk
+from utils.localpysdk import LocalPySdk
+from utils.ta import StockTA
 
 def gsfhelpConf():
     """
