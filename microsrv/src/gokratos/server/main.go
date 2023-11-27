@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	helloworld "gokratos/helloworld/v1"
+	helloworld "gokratos/api/greeter/v1"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"

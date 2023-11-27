@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	v1 "gokratos/helloworld/v1"
+	v1 "gokratos/api/greeter/v1"
 	"log"
 
 	"github.com/go-kratos/kratos/v2/middleware/recovery"

@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	v1 "gokratos/helloworld/v1"
+	v1 "gokratos/api/greeter/v1"
 	"log"
 	"time"
 

@@ -100,14 +100,17 @@ case $opt in
     # == end ==
 
     # golang 版本
-    echo -e "可选go版本:\n  0 [go1.18.10]\n  1 [go1.20.11]" 
+    echo -e "可选go版本:\n  0 [go18]\n  1 [go19]\n  2 [go20]" 
     read -p "版本选择: " goopt
     gozip=""
     case $goopt in
       0)
         gozip="go1.18.10.linux-amd64.tar.gz"
       ;;
-      1) 
+      1)
+        gozip="go1.19.13.linux-amd64.tar.gz"
+      ;;
+      2) 
         gozip="go1.20.11.linux-amd64.tar.gz"
       ;;
       *)
@@ -178,6 +181,7 @@ EOT
     echo "进行容器内的配置..."
     docker exec -it $container_name /bin/bash -c 'chmod 750 /download/inrun.sh'
     docker exec -it $container_name /bin/bash -c 'bash /download/inrun.sh'
+    docker exec -it $container_name /bin/bash -c 'apt-get install -y gcc automake autoconf libtool make'
   ;;
   5)
     # 在basic镜像上生成 nodejs 开发容器
