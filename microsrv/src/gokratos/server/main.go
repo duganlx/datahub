@@ -27,8 +27,8 @@ var (
 	Name    = "srv1"
 	Version = "v1.0.0"
 
-	NacosIp = "192.168.0.104"
-	NacosNamespaceId = "2fe77cf0-7920-4405-82e6-bea518447a2f"
+	NacosIp          = "192.168.15.42"
+	NacosNamespaceId = "ad13b472-04a0-4cf5-a4ee-d8cfd4cf81f5"
 )
 
 type server struct {
