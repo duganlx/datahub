@@ -5,7 +5,7 @@
 注册中心
 - [x] 理想情况下的服务注册与访问（grpc、http）
 - [ ] 注册服务的访问权限控制
-- [ ] 
+- [ ] 服务可用性监测
 
 配置中心
 - [x] 服务启动时读取 nacos 配置
@@ -127,3 +127,4 @@ func (client *Client) do(req *http.Request) (*http.Response, error) {
 - [SSL/TLS协议运行机制的概述](https://www.ruanyifeng.com/blog/2014/02/ssl_tls.html)
 - [grpc-auth-support.md(grpc-go Documentation)](https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-auth-support.md)
 - [gRPC authentication guide](https://grpc.io/docs/guides/auth/)
+- [jwt在线解密](https://www.box3.cn/tools/jwt.html)

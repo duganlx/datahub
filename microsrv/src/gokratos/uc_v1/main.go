@@ -1,12 +1,14 @@
 package main
 
 import (
-	"context"
+	"fmt"
 	uc "gokratos/api/uc/v1"
 	"log"
 
 	"github.com/go-kratos/kratos/contrib/registry/nacos/v2"
 	"github.com/go-kratos/kratos/v2"
+	"github.com/go-kratos/kratos/v2/config"
+	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-kratos/kratos/v2/transport/http"
@@ -16,28 +18,23 @@ import (
 )
 
 var (
-	Name    = "uc"
+	Name    = "uc_v1"
 	Version = "v1.0.0"
 
 	NacosIp          = "192.168.15.42"
 	NacosNamespaceId = "ad13b472-04a0-4cf5-a4ee-d8cfd4cf81f5"
+
+	// Authentication
+	ClientId     = "thisisaclientid"
+	ClientSecret = "thisisaclientsecret"
+	AppId        = "thisisaappid"
+	AppSecret    = "thisisaappsecret"
+
+	// User Info => mock user db
+	UserId     = 1427818295636267008
+	UserName   = "Tom"
+	UserMobile = "15306218464"
 )
-
-type server struct {
-	uc.UnimplementedUserCenterServer
-}
-
-func (s *server) Login(ctx context.Context, in *uc.LoginRequest) (*uc.LoginReply, error) {
-
-	return &uc.LoginReply{
-		AccessToken:  "xxx",
-		RefreshToken: "kkk",
-		TokenType:    "ttt",
-		Expires:      120,
-		Scrope:       "",
-		Uid:          100,
-	}, nil
-}
 
 func startSrv(httpaddr, grpcaddr string) {
 	s := &server{}
@@ -96,16 +93,48 @@ func startSrv(httpaddr, grpcaddr string) {
 	}
 }
 
+func localCnf(path string) (string, string) {
+	c := config.New(
+		config.WithSource(
+			file.NewSource(path),
+		),
+	)
+
+	if err := c.Load(); err != nil {
+		panic(err)
+	}
+
+	var v struct {
+		Server struct {
+			Http struct {
+				Addr    string `json:"addr"`
+				Timeout string `json:"Timeout"`
+			} `json:"http"`
+			Grpc struct {
+				Addr    string `json:"addr"`
+				Timeout string `json:"Timeout"`
+			} `json:"grpc"`
+		} `json:"Server"`
+	}
+
+	if err := c.Scan(&v); err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("读取的配置为: %+v\n", v)
+	return v.Server.Http.Addr, v.Server.Grpc.Addr
+}
+
 func main() {
 
-	opt := "nested"
+	opt := "local"
 
 	switch opt {
 	case "nested":
 		startSrv(":8050", ":9050")
-	// case "local":
-	// 	httpaddr, grpcaddr := localCnf("./config.yaml")
-	// 	nestedCnf(httpaddr, grpcaddr)
+	case "local":
+		httpaddr, grpcaddr := localCnf("./config.yaml")
+		startSrv(httpaddr, grpcaddr)
 	// case "nacos":
 	// 	httpaddr, grpcaddr := nacosCnf()
 	// 	nestedCnf(httpaddr, grpcaddr)

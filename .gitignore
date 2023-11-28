@@ -13,8 +13,8 @@ mathstudy/utils/__pycache__
 microsrv/src/nacosconf/*
 !microsrv/src/nacosconf/README.md
 microsrv/src/gokratos/client/log
+microsrv/src/gokratos/client/cache
 microsrv/src/gokratos/server/log
-microsrv/src/gokratos/client/cache/naming/*
-!microsrv/src/gokratos/client/cache/naming/info.json
-microsrv/src/gokratos/server/cache/config/*
-!microsrv/src/gokratos/server/cache/config/info.json
+microsrv/src/gokratos/server/cache
+microsrv/src/gokratos/uc/log
+microsrv/src/gokratos/uc/cache

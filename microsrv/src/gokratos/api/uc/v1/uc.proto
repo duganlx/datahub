@@ -16,16 +16,16 @@ service UserCenter {
 }
 
 message LoginRequest {
-  string accountType = 1;
-  string account = 2;
-  string pwd = 3;
+  string accessType = 1;
+  string appId = 2;
+  string appSecret = 3;
 }
 
 message LoginReply {
   string accessToken = 1;
   string refreshToken = 2;
   string tokenType = 3;
-  int32 expires = 4;
+  int64 expires = 4;
   string scrope = 5;
   int64 uid = 6;
 }
