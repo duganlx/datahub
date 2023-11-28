@@ -128,3 +128,4 @@ func (client *Client) do(req *http.Request) (*http.Response, error) {
 - [grpc-auth-support.md(grpc-go Documentation)](https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-auth-support.md)
 - [gRPC authentication guide](https://grpc.io/docs/guides/auth/)
 - [jwt在线解密](https://www.box3.cn/tools/jwt.html)
+- [Casbin 文档](https://casbin.org/zh/docs/overview)
