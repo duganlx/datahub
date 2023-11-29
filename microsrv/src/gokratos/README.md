@@ -14,7 +14,11 @@
 
 ## 实践
 
+---
+
 客户端每次运行前都需要将 cache/naming 中的内容删除，否则无法启动。报错信息为: rpc error: code = DeadlineExceeded desc = context deadline exceeded
+
+---
 
 客户端通过 nacos 去调用服务器的http方式接口时，会出现问题 `code = 503 reason = NODE_NOT_FOUND message = error: code = 503 reason = no_available_node message =  metadata = map[] cause = <nil> metadata = map[] cause = <nil>`，问题定位如下。解决办法有两种，第一种是采用grpc去访问（推荐）；第二种是手动取服务节点转换成最终的url(比如 `http://127.0.0.1:8000`)去访问。
 ```go
@@ -121,6 +125,22 @@ func (client *Client) do(req *http.Request) (*http.Response, error) {
 }
 ```
 
+---
+
+目前存在两个需求点：1. 资产单元的权限管理; 2. 微服务架构下服务的权限管理;
+
+*资产单元的权限管理*，即为 right用户的right模型在right资产单元进行下单交易。那么就需要考虑如下几个问题：
+
+1. 如何保证 right用户? 即资产单元允许哪些用户进行访问（资产单元的权限管理）
+2. 如何保证 right模型? 模型是用户自己创建的，是否为正确的模型是由用户进行管理，平台可以提供一套机制协助进行管理。
+
+casbin提供了RBAC的权限设计方案，可以将用户作为sub，资产单元作为obj，act无用；另外还需要有`角色/组`的概念，`角色/组` 与资产单元进行绑定，表示该`角色/组`可以访问哪些资产单元，而用户可以跟`角色/组`进行绑定，表示该用户可以访问该`角色/组`中所有资产单元。这样casbin就帮助我们解决第一个问题(如何保证 right用户?)了；第二个问题由访问令牌进行解决，即用户输入appid和expires后，生成对应的appsecret，然后在模型登录时提供appid 和 appsecret 进行鉴权即可。
+
+
+
+*微服务架构下服务的权限管理*
+
+
 
 ## 参考
 
@@ -129,3 +149,4 @@ func (client *Client) do(req *http.Request) (*http.Response, error) {
 - [gRPC authentication guide](https://grpc.io/docs/guides/auth/)
 - [jwt在线解密](https://www.box3.cn/tools/jwt.html)
 - [Casbin 文档](https://casbin.org/zh/docs/overview)
+- [Basic Role-Based HTTP Authorization in Go with Casbin](https://zupzup.org/casbin-http-role-auth/)
