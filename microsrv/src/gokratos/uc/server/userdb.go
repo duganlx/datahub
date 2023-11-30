@@ -14,8 +14,8 @@ type User struct {
 }
 
 var users = []*User{
-	{Id: 15739, UserName: "Tom", Mobile: "15308681364"},
-	{Id: 15743, UserName: "Jim", Mobile: "13608681364"},
+	{Id: 15739, UserName: "ww", Mobile: "15308681364"},
+	{Id: 15743, UserName: "xjw", Mobile: "13608681364"},
 }
 
 func getUserByCode(ctx context.Context, appid string, appsecret string) (*User, error) {

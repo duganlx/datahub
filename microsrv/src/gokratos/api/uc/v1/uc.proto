@@ -19,6 +19,7 @@ message LoginRequest {
   string accessType = 1;
   string appId = 2;
   string appSecret = 3;
+  string auCode = 4;
 }
 
 message LoginReply {

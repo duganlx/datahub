@@ -8,6 +8,8 @@ go-kratos 文档: https://go-kratos.dev/docs/
 
 vscode 插件: `Makefile Tools`
 
+nodejs 插件: `Prettier - Code formatter`, `ESLint`
+
 ## python-miniconda 开发
 
 conda 常用命令

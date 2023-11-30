@@ -12,9 +12,7 @@ import (
 )
 
 // import (
-// 	"fmt"
 
-// 	"gokratos/uc/bincas"
 // 	"log"
 
 // 	"github.com/go-kratos/kratos/contrib/registry/nacos/v2"
@@ -137,14 +135,6 @@ func startSrv(httpaddr, grpcaddr string) {
 func main() {
 
 	opt := "nested"
-
-	// ok, err := bincas.CanAccessAu("ww", "DRWZQ1ZT_03")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-
-	// fmt.Println("xxx: ", ok)
 
 	switch opt {
 	case "nested":

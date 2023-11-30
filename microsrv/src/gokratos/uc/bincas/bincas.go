@@ -15,6 +15,6 @@ func CanAccessAu(uid, aucode string) (bool, error) {
 	sub := fmt.Sprintf("USER_%s", uid)
 	obj := fmt.Sprintf("AU_%s", aucode)
 
-	ok, err := e.Enforce(sub, obj)
+	ok, err := e.Enforce(sub, obj, '*')
 	return ok, err
 }
