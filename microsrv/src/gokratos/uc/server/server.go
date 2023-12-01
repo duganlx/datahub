@@ -22,8 +22,7 @@ func (s *Server) Login(ctx context.Context, in *uc.LoginRequest) (*uc.LoginReply
 		return nil, errors.Errorf(400, "appid and appsecret should not be null", fmt.Sprintf("appid: %s, appsecret: %s", in.AppId, in.AppSecret))
 	}
 
-	// todo 需要鉴权 这个appid是否是某个aucode的 又或者是用户级的(所有aucode都可以访问)
-	user, err := getUserByCode(ctx, in.AppId, in.AppSecret)
+	user, err := getUserByCode(ctx, in.AppId, in.AppSecret, in.AuCode)
 	if err != nil {
 		return nil, err
 	}

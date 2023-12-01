@@ -16,10 +16,11 @@ type User struct {
 var users = []*User{
 	{Id: 15739, UserName: "ww", Mobile: "15308681364"},
 	{Id: 15743, UserName: "xjw", Mobile: "13608681364"},
+	{Id: 15747, UserName: "wsy", Mobile: "13708681364"},
 }
 
-func getUserByCode(ctx context.Context, appid string, appsecret string) (*User, error) {
-	at, err := getATByToken(ctx, appid, appsecret)
+func getUserByCode(ctx context.Context, appid string, appsecret string, aucode string) (*User, error) {
+	at, err := getATByToken(ctx, appid, appsecret, aucode)
 	if err != nil {
 		return nil, err
 	}
