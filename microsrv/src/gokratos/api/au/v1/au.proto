@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package au.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "client/api/au/v1;v1";
+
+service AssetUnit {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply) {
+    option (google.api.http) = {
+      get: "/helloworld/{name}"
+    };
+  }
+
+  rpc PlaceOrder (PlaceOrderRequest) returns (PlaceOrderReply) {
+    option (google.api.http) = {
+      post: "/placeorder"
+      body: "*"
+    };
+  }
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}
+
+message PlaceOrderRequest {
+  string appId = 1;
+  string appSecret = 2;
+  string orderMsg = 3;
+}
+
+message PlaceOrderReply {
+  bool ok = 1;
+}

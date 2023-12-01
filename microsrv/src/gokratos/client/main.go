@@ -1,32 +1,40 @@
 package main
 
+import (
+	"gokratos/client/porder"
+	"gokratos/client/ucfunc"
+)
+
 func main() {
-	opt := "direct"
+	opt := "placeorder"
 
 	switch opt {
-	case "direct":
+	case "authfunc":
 		// 测试鉴权功能
-		Demo1("http")
-		Demo2("http")
-		Demo3("http")
-		Demo4("http")
-		Demo5("http")
-		Demo6("http")
-		Demo7("http")
-		Demo8("http")
-		Demo9("http")
-		Demo10("http")
+		ucfunc.Demo1("http")
+		ucfunc.Demo2("http")
+		ucfunc.Demo3("http")
+		ucfunc.Demo4("http")
+		ucfunc.Demo5("http")
+		ucfunc.Demo6("http")
+		ucfunc.Demo7("http")
+		ucfunc.Demo8("http")
+		ucfunc.Demo9("http")
+		ucfunc.Demo10("http")
 
-		Demo1("grpc")
-		Demo2("grpc")
-		Demo3("grpc")
-		Demo4("grpc")
-		Demo5("grpc")
-		Demo6("grpc")
-		Demo7("grpc")
-		Demo8("grpc")
-		Demo9("grpc")
-		Demo10("grpc")
+		ucfunc.Demo1("grpc")
+		ucfunc.Demo2("grpc")
+		ucfunc.Demo3("grpc")
+		ucfunc.Demo4("grpc")
+		ucfunc.Demo5("grpc")
+		ucfunc.Demo6("grpc")
+		ucfunc.Demo7("grpc")
+		ucfunc.Demo8("grpc")
+		ucfunc.Demo9("grpc")
+		ucfunc.Demo10("grpc")
+	case "placeorder":
+		porder.PlaceOrder1("http")
+		porder.PlaceOrder1("grpc")
 	case "nacos":
 		// 测试
 		nacosRpc()

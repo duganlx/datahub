@@ -14,7 +14,7 @@ microsrv/src/nacosconf/*
 !microsrv/src/nacosconf/README.md
 microsrv/src/gokratos/client/log
 microsrv/src/gokratos/client/cache
-microsrv/src/gokratos/server/log
-microsrv/src/gokratos/server/cache
+microsrv/src/gokratos/au1/log
+microsrv/src/gokratos/au1/cache
 microsrv/src/gokratos/uc/log
 microsrv/src/gokratos/uc/cache

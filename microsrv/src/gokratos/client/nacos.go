@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	v1 "gokratos/api/greeter/v1"
+	v1 "gokratos/api/au/v1"
 	"log"
 	"time"
 
@@ -66,7 +66,7 @@ func nacosRpc() {
 	}
 	defer conn.Close()
 
-	client := v1.NewGreeterClient(conn)
+	client := v1.NewAssetUnitClient(conn)
 
 	cnt := 1
 	for {
