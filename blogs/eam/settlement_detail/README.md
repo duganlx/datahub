@@ -1,98 +1,87 @@
-# 结算明细报表 设计实现
+# 结算明细报表一期 设计实现
 
-## 资产概要
-
-该页面所涉及到的数据均保存到`UniverseData`对象中。该对象是由 `Balance` 表延伸而来，包含了很多延伸计算出来的字段。具体的字段如下所示。
-
-计算公式汇总
+## 计算公式汇总
 
 ### 当日盈亏
 
-T0 交易（废弃）
-
-```
-当日盈亏 = 卖出市值 + 净出入金 - 买入市值 + 资金转出 - 资金转入
-当日盈亏% = 当日盈亏 / 买入市值
-```
-
-非 T0 交易，维度: 资产
+最新计算如下
 
 ```text
+==== 资产维度 ====
 日末资产 = 总资产 - 总负债 + 资金转出 + 证券转出
 日初资产 = 日初总资产 - 日初总负债 + 资金转入 + 证券转入
 当日盈亏 = 日末资产 - 日初资产
 当日盈亏% = (日末资产 / 日初资产 - 1) * 100%
-```
 
-- 非 T0 交易，维度: 市值
 
-```text
+==== 市值维度 ====
 日末资产 = 总资产 - 总负债 + 资金转出 + 证券转出
 日初资产 = 日初总资产 - 日初总负债 + 资金转入 + 证券转入
 当日盈亏 = 日末资产 - 日初资产
-
 日初市值 = 日初持仓市值 - 日初证券负债
 # 如果日末资产 <= 0，则当日盈亏% = 0
 当日盈亏% = (当日盈亏 / 日初市值) * 100%
 ```
 
+历史版本
+
+```
+==== 区分是否为T0下 T0 交易 ====
+当日盈亏 = 卖出市值 + 净出入金 - 买入市值 + 资金转出 - 资金转入
+当日盈亏% = 当日盈亏 / 买入市值
+```
+
 ### 当日盈亏(对冲)
 
-**指数**
+最新计算如下
+
+这三种情况下，*成立以来*的第一天的`当日盈亏%(对冲) = 当日盈亏%(对冲) * 0`，原因是成立第一天还在建仓，没有日初持仓市值和日初证券负债。
 
 ```text
+==== 对冲类型:指数 ====
 基准指数pnl% = dm_histdata.bar_day取close和preclose按照pnl公式计算
 当日盈亏(对冲) = (日初持仓市值 + 日初证券负债) * 基准指数pnl%
 当日盈亏%(对冲) = 基准指数pnl%
-```
 
-历史版本
 
-```
-==== v1.0 ====
-基准指数pnl% = dm_histdata.bar_day取close和preclose按照pnl公式计算
-当日盈亏(对冲) = (日初持仓市值 + 日初证券负债) * 基准指数pnl%
-当日盈亏%(对冲) = 当日盈亏(对冲) / 日初资产
--> 日初资产 (资产维度) = 日初总资产 - 日初总负债 + 资金转入 + 证券转入
--> 日初资产 (市值维度) = 日初持仓市值 - 日初证券负债 + 证券转入
-```
+==== 对冲类型:公司基准 ====
+指数pnl% = dm_histdata.bar_day取close和preclose按照pnl公式计算
+设定pnl% = x% / 243 (x为一平核定每年一个对冲成本的参数：10%(2021), 4%(2022), 3%(2023), 3%(2023))
+当日盈亏(对冲) = (日初持仓市值 + 日初证券负债) * (指数pnl% + 设定pnl%)
+当日盈亏%(对冲) = 指数pnl% + 设定pnl%
 
-**虚拟期值**
 
-```text
-对冲张数 = 200
-对冲票数 = round(日初持仓市值 / (基准指数的昨日收盘价 * 对冲张数))
-当日盈亏(对冲) = 对冲票数 * (基准指数的昨日收盘价 * 对冲张数) * 基准指数pnl%
-当日盈亏%(对冲) = 基准指数pnl%
-```
-
-历史版本
-
-```text
-==== 历史版本v1.0 ====
-对冲张数 = 200
-对冲票数 = round(日初持仓市值 / (基准指数的昨日收盘价 * 对冲张数))
-当日盈亏(对冲) = 对冲票数 * (基准指数的昨日收盘价 * 对冲张数) * 基准指数pnl%
-当日盈亏%(对冲) = 当日盈亏(对冲) / 日初资产
--> 日初资产 (资产维度) = 日初总资产 - 日初总负债 + 资金转入 + 证券转入
--> 日初资产 (市值维度) = 日初持仓市值 - 日初证券负债 + 证券转入
-```
-
-**主力合约**
-
-```text
+==== 对冲类型:主力合约 ====
 pnl% = ads_eqw.ads_ic889中的 pnl_close
 当日盈亏(对冲) = (日初持仓市值 + 日初证券负债) * pnl%
 当日盈亏%(对冲) = pnl%
 ```
 
-**公司基准**
-
-公司根据实际情况，由一平进行核定每年一个对冲成本的参数
+历史版本
 
 ```text
-当日盈亏(对冲) = ?
-当日盈亏%(对冲) = ?
+==== 虚拟期值-v1.1 ====
+对冲张数 = 200
+对冲票数 = round(日初持仓市值 / (基准指数的昨日收盘价 * 对冲张数))
+当日盈亏(对冲) = 对冲票数 * (基准指数的昨日收盘价 * 对冲张数) * 基准指数pnl%
+当日盈亏%(对冲) = 基准指数pnl%
+
+
+==== 指数-v1.0 ====
+基准指数pnl% = dm_histdata.bar_day取close和preclose按照pnl公式计算
+当日盈亏(对冲) = (日初持仓市值 + 日初证券负债) * 基准指数pnl%
+当日盈亏%(对冲) = 当日盈亏(对冲) / 日初资产
+-> 日初资产 (资产维度) = 日初总资产 - 日初总负债 + 资金转入 + 证券转入
+-> 日初资产 (市值维度) = 日初持仓市值 - 日初证券负债 + 证券转入
+
+
+==== 虚拟期值-v1.0 ====
+对冲张数 = 200
+对冲票数 = round(日初持仓市值 / (基准指数的昨日收盘价 * 对冲张数))
+当日盈亏(对冲) = 对冲票数 * (基准指数的昨日收盘价 * 对冲张数) * 基准指数pnl%
+当日盈亏%(对冲) = 当日盈亏(对冲) / 日初资产
+-> 日初资产 (资产维度) = 日初总资产 - 日初总负债 + 资金转入 + 证券转入
+-> 日初资产 (市值维度) = 日初持仓市值 - 日初证券负债 + 证券转入
 ```
 
 ### 当日超额
@@ -108,26 +97,43 @@ alpha% = 当日盈亏% - 当日盈亏%(对冲)
 累计* = 昨日累计* + 当日*
 ```
 
-### 数据来源
+## 数据来源汇总
 
-资产单元-标签信息表 ads_eqw.ads_unit_label_value 字段 {deal_date, au_code, label, value}
+按产品中，左侧树形列表：dim_datahub.dim_unit_account_product
 
-```sql
-# 统计策略在每个资产单元的最早时间
-select au_code, `value`, min(deal_date) as deal_date from ads_eqw.ads_unit_label_value where label = 'strategy' group by au_code, `value`
-```
+### 数据表
 
-### 页面数据流动
+资产单元打标表 ads_eqw.ads_unit_label_value[deal_date, au_code, label, value]：保存资产单元在每一个交易日的标签数据 `(deal_date, au_code, label) -> value`
 
-闪缩问题定位
+dim_datahub.dim_jhlun_product [productName, productFullName, fundRecordNumber, parentProductId, productCode, setDate, productStatus, productStrategyTyp, pbInternalProductCode]：保存了产品的信息
 
-begin, end, balance, loading, submitsign, chartDateRange, colDisplay, hiddenColumnFields,
+ads_eqw.ads_statement_status [au_code, account_name_cn, settle_status, statement_status]：对账单存续状态，针对资金账号维度
 
-## 按产品
+命名规范：`ads_模块_业务类型_数据口径`
 
-todo
+- 模块：account 账户, product 产品, unit 单元
+- 业务类型：balance 资产信息, position 持仓信息, transit 划拨信息
+- 数据口径：raw 原始数据, pending 内部清算, checking 结算单, confirm 复核后
 
-## 按投资经理
+资产信息表 ads_eqw.ads_account_balance_pending, ads_eqw.ads_unit_balance_pending
+
+持仓信息表 ads_eqw.ads_account_position_pending, ads_eqw.ads_unit_position_pending
+
+成交信息表 ads_eqw.ads_account_trade_pending, ads_eqw.ads_unit_trade_pending
+
+资金划转信息表 ads_eqw.ads_account_fund_transit_pending, ads_eqw.ads_unit_fund_transit_pending, ads_eqw.ads_account_fund_transit_checking
+
+持仓划转信息表 ads_eqw.ads_account_equity_transit_pending, ads_eqw.ads_unit_equity_transit_pending, ads_account_equity_transit_checking
+
+内部清算-结算单对账结果评分表 ads_eqw.ads_account_settle_balance_org_checking, ads_eqw.ads_account_settle_position_checking
+
+一致性校验表 dwd_tradedata.dwd_diff_trading, dwd_tradedata.dwd_diff_goal_position, dwd_paper.dwd_diff_trading, dwd_paper.dwd_diff_goal_position
+
+dm_histdata.bar_day
+
+---
+
+### 按投资经理
 
 在按投资经理的结算明细报表页面中, 左侧的目录树为三级结构, 各级的关系是 _基金经理-产品-资产单元_. 实现上是先取 `dim_datahub.dim_unit_account_product` 表, 该表有 _资产单元_ 和 _产品_ 之间的映射关系, 接着利用 `ads_eqw.ads_unit_label_value` 表可以取得 _资产单元_ 和 _基金经理_ 之间的映射关系, 通过用户中心的接口`/api/uc/v1/users` 可以请求得到所有用户的信息. 具体如下所示.
 
@@ -150,13 +156,27 @@ StlUnitItem{category: 'unit'; type: string; name: string; fullName: string; code
 // ads_unit_label_value.au_code --- dim_unit_account_product.
 ```
 
-### 资产概要 - 具体某日指标
-
-按投资经理的资产概要页面中，有一个统计了标定时间范围内的业绩表现走势图，以及一个查看具体某一天表现的 _块块_，如下图红色框起来的部分。在这个 _块块_ 中有具体三个指标，分别是 `基准盈亏(万)`、`区间盈亏(万)`、`区间超额(万)`。基准盈亏是根据下拉选择的基准指数而不同，具体有 A 股的指数、港股的指数、美股的指数（数据保存在`ads_eqw.ads_eqw_benchmark`）。结算的数据取自 `ads_eqw.ads_unit_balance_pending`，而基准指数的数据取自表 `dm_histdata.bar_day`。
-
-由于不同市场开市情况大不相同，所以存在一种情况，结算有日期 a 的数据，而基准指数没有日期 a 的数据，在这种情况下，处理方式为取距离日期 a 最近的一次有数据的记录作为日期 a 的基准指数的数据进行接下来的计算。
-
 ---
+
+## 典型场景分析
+
+### 场景 1：成立以来下的选择项目切换
+
+在资产概要页面中，当时间范围选择"成立以来"时，会自行判断选择项目的*起始日期*，然后取数据时会取相应日期范围内的数据进行展示。此时切换选择的项目时，会出现页面数据加载后会出现一次突变。出现数据突变的原因是触发了两次获取数据的 useEffect，而两次取数据的时间范围不相同，所以取得的数据也不相同产生。而进一步分析，之所以会触发两次 useEffect，是因为当切换项目时，会直接触发取数据的 useEffect，而此时时间范围还是上一次旧数据；与此同时，项目切换因为*起始日期*不同，会再一次触发取数据的 useEffect；当第一次取数据的 useEffect 完成时页面就完成渲染了，第二次取数据的 useEffect 完成会再次渲染页面，用户观感上就是突然间数据突变了。
+
+目前的解决方案是采用在取数据的 useEffect 中加入一段代码去判断当时间范围为"成立以来"时先发一次请求去拿到正确的*起始日期*后去发送请求。这样即可让两次发送的请求携带参数是完全一致从而规避掉页面突变的问题。该解决办法是目前设计下的最优解法。
+
+### 场景 2：资产概要中的数据计算
+
+资产概要中的数据计算有当日盈亏、当日盈亏（对冲）、当日超额以及这三个的累计值。当日盈亏计算分为*资产*和*市值*两个维度。当日盈亏（对冲）根据对冲类型不同也不一样，对冲类型有*指数*，*公司基准*和*主力合约*三种，*虚拟期指*这个对冲类型被移除了。另外，这些计算指标有两种量纲，人民币（元/万/亿）和百分比（%）。所以这几个指标在页面展示时就有 12 种（2x2x3）情况了。原始数据的来来源也各有不同，当日盈亏的数据来自于资产信息表（balance）；当日盈亏（对冲）则根据类型不同，数据来源也不同，指数和公司基准要指数日 K 数据（bar_day），主力合约需要 ic889（ads_ic889）。
+
+目前在代码实现上，会一次性请求所有需要的数据并计算出所有情况的结果。这样在页面切换时即可直接渲染。变量命名方式采用`对冲类型_指标_[市值/资产]`，比如，主力合约在市值维度下的当日超额，其变量命名为`zlhy_alpha_sz`。在进行切换时，s2 表格展示对应情况下的*指标*即可。这样设计的在应对每种情况计算公式各不相同，或者不同的情况下展示的数据指标有差异时（之前的虚拟期指就需要单独展示多一列数据对冲张数`xnqz_ticket`）表现很好。但从目前的情况来看，所有的情况下展示的*指标*完全一致。在这种情况下，缺点似乎更为明显：1. 代码冗余度高，每多一个指标就得按照排列组合增加多个字段，且维护较为繁琐；2. 初次加载速度慢，但在后续切换情况时很快。如果后续开发中仍然保持目前的情况（*指标*基本一致），可以考虑改成每次只计算展示的那种情况下的指标，切换时再计算新的情况，变量也只需要保存一份。
+
+### 场景 3：左侧项目切换与右侧联动
+
+todo
+
+## 附录
 
 ### UniverseData 对象属性
 
@@ -255,3 +275,14 @@ StlUnitItem{category: 'unit'; type: string; name: string; fullName: string; code
 - isT0: 根据`ads_eqwads_unit_label_value`表中 label 为 strategy，value 为 T0 和 T1 的记录。如果当天有 T1 的记录，则直接判定为 _非 T0_；否则根据当天是否有 T0 记录进行判定。
 - banchmarkPnlPercentage: 数据取 `dm_histdata.bar_day`，按照公式 pnl% = (当日收盘价 - 昨日收盘价) / 昨日收盘价 \* 100% 计算得到
 - isValid: 头尾如果出现 `[持仓市值, 证券负债, 手续费]` 都为 0，则判定为无效数据，中间部分如果连续三天出现这三个字段为 0 的话，也判定为无效数据
+
+### SQL 样例
+
+统计 ads_unit_label_value 表中 label 为策略的每个资产单元的最早时间
+
+```sql
+-- table field: [deal_date, au_code, label, value]
+select au_code, `value`, min(deal_date) as deal_date from ads_eqw.ads_unit_label_value where label = 'strategy' group by au_code, `value`
+```
+
+统计 ads_unit_label_value 表中
