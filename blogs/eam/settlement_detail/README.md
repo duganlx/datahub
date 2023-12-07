@@ -33,9 +33,7 @@
 
 ### 当日盈亏(对冲)
 
-最新计算如下
-
-这三种情况下，*成立以来*的第一天的`当日盈亏%(对冲) = 当日盈亏%(对冲) * 0`，原因是成立第一天还在建仓，没有日初持仓市值和日初证券负债。
+最新计算如下，需要注意的是在这三种情况下，*成立以来*的第一天的`当日盈亏%(对冲) = 当日盈亏%(对冲) * 0`，原因是成立第一天还在建仓，没有日初持仓市值和日初证券负债。
 
 ```text
 ==== 对冲类型:指数 ====
@@ -97,6 +95,15 @@ alpha% = 当日盈亏% - 当日盈亏%(对冲)
 累计* = 昨日累计* + 当日*
 ```
 
+### 是否参与计算
+
+```text
+持仓变动% = (持仓市值 - 证券负债) / (日初持仓市值 - 日初证券负债) - 1
+
+持仓变动% <= 设定阈值%  ==>  参与计算
+持仓变动% > 设定阈值%  ==>  参与计算
+```
+
 ## 数据来源汇总
 
 按产品中，左侧树形列表：dim_datahub.dim_unit_account_product
@@ -115,7 +122,10 @@ ads_eqw.ads_statement_status [au_code, account_name_cn, settle_status, statement
 - 业务类型：balance 资产信息, position 持仓信息, transit 划拨信息
 - 数据口径：raw 原始数据, pending 内部清算, checking 结算单, confirm 复核后
 
-资产信息表 ads_eqw.ads_account_balance_pending, ads_eqw.ads_unit_balance_pending
+资产信息表 ads_eqw.ads_account_balance_pending, ads_eqw.ads_unit_balance_pending;
+
+- au_name 资产单元名称, au_code 资产单元, currency 币种,
+- net_asset 净资产, total_asset_initial 日初总资产, total_asset 总资产, equity_initial 日初市值, equity 持仓市值, equity_in_transit 在途市值, fund_initial 交易日开始时的可用资金, fund_deposit_withdraw 净出入金, fund_available 可用资金, fund_in_transit 在途资金, fund_frozen 冻结资金, balance 资金余额, total_liability 总负债, cash_debt 资金负债, security_debt 证券负债, commission 手续费, create_time 成交时间, update_time 更新时间, settle_time 清算时间, trade_date 交易日, fund_deposit 入金, fund_withdraw 出金, total_liability_initial 日初总负债, cash_debt_initial 日初资金负债, security_debt_initial 日初证券负债, type 账户类型, equity_deposit 转入证券市值, equity_withdraw 转出证券市值, net_equity_traded 净买入证券市值, equity_buy 买入证券市值, equity_sell 卖出证券市值
 
 持仓信息表 ads_eqw.ads_account_position_pending, ads_eqw.ads_unit_position_pending
 
@@ -162,7 +172,7 @@ StlUnitItem{category: 'unit'; type: string; name: string; fullName: string; code
 
 ### 场景 1：成立以来下的选择项目切换
 
-在资产概要页面中，当时间范围选择"成立以来"时，会自行判断选择项目的*起始日期*，然后取数据时会取相应日期范围内的数据进行展示。此时切换选择的项目时，会出现页面数据加载后会出现一次突变。出现数据突变的原因是触发了两次获取数据的 useEffect，而两次取数据的时间范围不相同，所以取得的数据也不相同产生。而进一步分析，之所以会触发两次 useEffect，是因为当切换项目时，会直接触发取数据的 useEffect，而此时时间范围还是上一次旧数据；与此同时，项目切换因为*起始日期*不同，会再一次触发取数据的 useEffect；当第一次取数据的 useEffect 完成时页面就完成渲染了，第二次取数据的 useEffect 完成会再次渲染页面，用户观感上就是突然间数据突变了。
+在资产概要页面中，当时间范围选择"成立以来"时，会自行判断选择项目的*起始日期*，然后取数据时会取相应日期范围内的数据进行展示。此时切换选择的项目时，会出现页面数据加载后会出现一次突变。出现数据突变的原因是触发了两次获取数据的 useEffect，因为两次取数据的时间范围不相同，所以取得的数据也不相同。而进一步分析，之所以会触发两次 useEffect，是因为当切换项目时，会直接触发取数据的 useEffect，而此时时间范围还是上一次旧数据；与此同时，项目切换因为*起始日期*不同，会再一次触发取数据的 useEffect；当第一次取数据的 useEffect 完成时页面就完成渲染了，第二次取数据的 useEffect 完成会再次渲染页面，用户观感上就是突然间数据突变了。
 
 目前的解决方案是采用在取数据的 useEffect 中加入一段代码去判断当时间范围为"成立以来"时先发一次请求去拿到正确的*起始日期*后去发送请求。这样即可让两次发送的请求携带参数是完全一致从而规避掉页面突变的问题。该解决办法是目前设计下的最优解法。
 
@@ -174,7 +184,48 @@ StlUnitItem{category: 'unit'; type: string; name: string; fullName: string; code
 
 ### 场景 3：左侧项目切换与右侧联动
 
-todo
+左侧树形列表可以选择不同的项目（按产品：产品/资金账号/资产单元；按投资经理：投资经理/产品/资产单元；按策略：策略/产品/资产单元），接着右侧就会展示该项目的结算明细。另外，左侧项目的选择不仅仅有单选，还存在复选的情况，就是查看复选的几个组合起来的结算明细。复选的限制在不同的 Tab 页并不相同：按产品中，并没有任何限制，用户可以任意组合产品、资金账号、资产单元；按投资经理中，只允许复选同属于一个投资经理下的产品和资产单元；按策略中，也只允许复选同属于一个策略下的产品和资产单元。在页面实现上，左侧树形列表和右侧结算明细分属于两个组件，左侧组件会将选择的项目以*对象*数组的形式发送给右侧组件，所以该*对象*数组必须精确表达出选中的项目，项目选择的场景有如下所示。在按投资经理和按策略下选择产品/资产单元时，传给右侧组件的对象数组仅仅有产品/资产单元，并不知道是哪个投资经理或哪个策略，所以会再传一个*根项目*的参数给右侧组件。由于按产品中复选可以跨越多个产品，所以在该场景下*根项目*是传空。右侧组件在收到了选中*对象*数组和*根项目*的参数信息后，就有足够的信息去获取结算数据进行展示。
+
+```text
+项目选择的场景
+== 按产品 ==
+1. 单选 => 产品，资金账号，资产单元
+2. 选择多个产品
+3. 选择几个产品和几个资金账号
+4. 选择几个产品和几个资金账号和几个资产单元
+5. 选择几个产品和几个资产单元
+6. 选择多个资金账号
+7. 选择几个资金账号和几个资产单元
+8. 选择多个资产单元
+
+== 按投资经理 ==
+1. 单选 => 投资经理，产品，资产单元
+2. 在单个投资经理下，选择多个产品
+3. 在单个投资经理下，选择几个产品和几个资产单元
+4. 在单个投资经理下，选择多个资产单元
+
+== 按策略 ==
+1. 单选 => 策略，产品，资产单元
+2. 在单个策略下，选择多个产品
+3. 在单个策略下，选择几个产品和几个资产单元
+4. 在单个策略下，选择多个资产单元
+```
+
+### 场景 4：标签表的设计使用
+
+标签表指的是 ads_eqw.ads_unit_label_value 存放了资产单元在每一个交易日的标签数据，数据表一共有四列：交易日 deal_date, 资产单元 au_code, 标签名 label, 标签值 value。所以如果想获取某个标签值 value，需要提供三个参数 deal_date, au_code, label。
+
+产品在运行过程中存在不同交易日归属于不同的投资经理和不同交易日归属于不同的策略类型。所以，在按投资经理或按策略展示时，就需要去标签表中取得每一个资产单元在每一天的投资经理标签 manager 或策略标签 strategy 的数据进行过滤才能得到正确的统计结果。一些使用到的 SQL 语句如下：
+
+```sql
+-- 获取按策略下每个资产单元的最早时间
+select au_code, `value`, min(deal_date) as deal_date from ads_eqw.ads_unit_label_value where label = 'strategy' group by au_code, `value`
+
+-- 获取每个资产单元的最新结算时间
+select au_code, max(deal_date) as deal_date from ads_eqw.ads_unit_label_value group by au_code, `value`
+```
+
+### 场景 5：左侧项目列表设计
 
 ## 附录
 
@@ -276,13 +327,10 @@ todo
 - banchmarkPnlPercentage: 数据取 `dm_histdata.bar_day`，按照公式 pnl% = (当日收盘价 - 昨日收盘价) / 昨日收盘价 \* 100% 计算得到
 - isValid: 头尾如果出现 `[持仓市值, 证券负债, 手续费]` 都为 0，则判定为无效数据，中间部分如果连续三天出现这三个字段为 0 的话，也判定为无效数据
 
-### SQL 样例
+### 对象构建
 
-统计 ads_unit_label_value 表中 label 为策略的每个资产单元的最早时间
-
-```sql
--- table field: [deal_date, au_code, label, value]
-select au_code, `value`, min(deal_date) as deal_date from ads_eqw.ads_unit_label_value where label = 'strategy' group by au_code, `value`
+```typescript
+type SettleUnitItem = {
+  category: "unit" | "account" | "product";
+};
 ```
-
-统计 ads_unit_label_value 表中
