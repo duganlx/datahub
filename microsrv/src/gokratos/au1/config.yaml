@@ -5,3 +5,5 @@ server:
   grpc:
     addr: 0.0.0.0:9000
     timeout: 1s
+au:
+  code: EAMLS1ZT_00

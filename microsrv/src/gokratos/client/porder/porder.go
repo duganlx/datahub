@@ -50,7 +50,7 @@ func newAu1GrpcClient() (au.AssetUnitClient, func(), error) {
 	return client, close, nil
 }
 
-func send(appid, appsecret, aucode, connType string) (bool, error) {
+func send(appid, appsecret,  connType string) (bool, error) {
 	var reply *au.PlaceOrderReply
 	ctx := context.Background()
 
@@ -95,11 +95,10 @@ func send(appid, appsecret, aucode, connType string) (bool, error) {
 
 // PlaceOrder1 用户模型要去资产单元下单整体过程
 func PlaceOrder1(conntype string) {
-	var appid = "asdj"
-	var appsecret = "d54sdfejbd561sa"
-	var aucode = "0148P1016_ww"
+	var appid = "kfuks"
+	var appsecret = "4fd1ufklnksbry9"
 
-	ok, err := send(appid, appsecret, aucode, conntype)
+	ok, err := send(appid, appsecret, conntype)
 	if !ok || err != nil {
 		fmt.Printf("[%s] %v\n", conntype, err)
 		return

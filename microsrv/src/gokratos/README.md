@@ -3,14 +3,15 @@
 ## nacos
 
 注册中心
+
 - [x] 理想情况下的服务注册与访问（grpc、http）
 - [ ] 注册服务的访问权限控制
 - [ ] 服务可用性监测
 
 配置中心
+
 - [x] 服务启动时读取 nacos 配置
 - [ ] 服务运行中实时同步最新的 nacos 配置
-
 
 ## 实践
 
@@ -20,7 +21,8 @@
 
 ---
 
-客户端通过 nacos 去调用服务器的http方式接口时，会出现问题 `code = 503 reason = NODE_NOT_FOUND message = error: code = 503 reason = no_available_node message =  metadata = map[] cause = <nil> metadata = map[] cause = <nil>`，问题定位如下。解决办法有两种，第一种是采用grpc去访问（推荐）；第二种是手动取服务节点转换成最终的url(比如 `http://127.0.0.1:8000`)去访问。
+客户端通过 nacos 去调用服务器的 http 方式接口时，会出现问题 `code = 503 reason = NODE_NOT_FOUND message = error: code = 503 reason = no_available_node message =  metadata = map[] cause = <nil> metadata = map[] cause = <nil>`，问题定位如下。解决办法有两种，第一种是采用 grpc 去访问（推荐）；第二种是手动取服务节点转换成最终的 url(比如 `http://127.0.0.1:8000`)去访问。
+
 ```go
 // client/main.go
 conn, err := transhttp.NewClient( // NewClient returns an HTTP client.
@@ -41,7 +43,7 @@ func NewClient(ctx context.Context, opts ...ClientOption) (*Client, error) {
 			if r, err = newResolver(ctx, options.discovery, target, selector, options.block, insecure, options.subsetSize); err != nil {
 				return nil, fmt.Errorf("[http client] new resolver failed!err: %v", options.endpoint)
 			}
-		} 
+		}
 	}
   return &Client{
 		opts:     options,
@@ -95,7 +97,7 @@ func (r *resolver) update(services []*registry.ServiceInstance) bool {
 	// ServiceInstance{ID, Name, Version, Metadata: map[string]string, Endpoints: []string}
 	// Rebalancer is nodes rebalancer.
 	// Rebalancer.Apply is apply all nodes when any changes happen
-	r.rebalancer.Apply(nodes) 
+	r.rebalancer.Apply(nodes)
 	// 将 services 中的 Endpoints 转换成 url，接着转换成 nodes，进行应用，均衡器会选择某个node进行访问，
 	// 但是在上面调用处已经阻塞，根本不会有nodes注册到 rebalancer 中。这导致在选择node访问时，其数组为空，
 	// 导致报错。
@@ -129,21 +131,21 @@ func (client *Client) do(req *http.Request) (*http.Response, error) {
 
 目前存在两个需求点：1. 资产单元的权限管理; 2. 微服务架构下服务的权限管理;
 
-*资产单元的权限管理*，即为 right用户的right模型在right资产单元进行下单交易。那么就需要考虑如下几个问题：
+_资产单元的权限管理_，即为 right 用户的 right 模型在 right 资产单元进行下单交易。那么就需要考虑如下几个问题：
 
-1. 如何保证 right用户? 即资产单元允许哪些用户进行访问（资产单元的权限管理）
-2. 如何保证 right模型? 模型是用户自己创建的，是否为正确的模型是由用户进行管理，平台可以提供一套机制协助进行管理。
+1. 如何保证 right 用户? 即资产单元允许哪些用户进行访问（资产单元的权限管理）
+2. 如何保证 right 模型? 模型是用户自己创建的，是否为正确的模型是由用户进行管理，平台可以提供一套机制协助进行管理。
 
-casbin提供了RBAC的权限设计方案，可以将用户作为sub，资产单元作为obj，资产单元访问方式作为act；另外还需要有`角色/组`的概念，`角色/组` 与资产单元进行绑定，表示该`角色/组`可以访问哪些资产单元，而用户可以跟`角色/组`进行绑定，表示该用户可以访问该`角色/组`中所有资产单元。这样casbin就帮助我们解决第一个问题了（如何保证 right用户?）；第二个问题由访问令牌进行解决，用户自行选择对可访问的资产单元并输入appid和expires后，生成对应的appsecret，然后在模型登录时提供appid 和 appsecret 进行鉴权即可。
+casbin 提供了 RBAC 的权限设计方案，可以将用户作为 sub，资产单元作为 obj，资产单元访问方式作为 act；另外还需要有`角色/组`的概念，`角色/组` 与资产单元进行绑定，表示该`角色/组`可以访问哪些资产单元，而用户可以跟`角色/组`进行绑定，表示该用户可以访问该`角色/组`中所有资产单元。这样 casbin 就帮助我们解决第一个问题了（如何保证 right 用户?）；第二个问题由访问令牌进行解决，用户自行选择对可访问的资产单元并输入 appid 和 expires 后，生成对应的 appsecret，然后在模型登录时提供 appid 和 appsecret 进行鉴权即可。
 
 - authcode{id, appid, appsecret, expires, aucodes, allow, userid}
 
 整个流程如下
-1. 管理员先配置好用户可访问的资产单元列表
-1. 用户生成某个资产单元（au1）的访问令牌appsecret，另外也可以生成能访问所有可访问资产单元（*）的令牌appsecret
-1. 用户编写的模型要访问资产单元进行下单前，需要提供appid, appsecret, aucode进行鉴权，鉴权通过之后会生成jwt信息
-1. 后续访问携带jwt信息访问
 
+1. 管理员先配置好用户可访问的资产单元列表
+1. 用户生成某个资产单元（au1）的访问令牌 appsecret，另外也可以生成能访问所有可访问资产单元（\*）的令牌 appsecret
+1. 用户编写的模型要访问资产单元进行下单前，需要提供 appid, appsecret, aucode 进行鉴权，鉴权通过之后会生成 jwt 信息
+1. 后续访问携带 jwt 信息访问
 
 **实验测试**
 
@@ -157,32 +159,70 @@ casbin提供了RBAC的权限设计方案，可以将用户作为sub，资产单�
 # 解读：用户wsy可以访问资产单元DRW001ZTX_04
 用户wsy: DRW001ZTX_04
 # 解读：用户yrl可以访问 MANAGER_WW组中的资产单元
-用户yrl: MANAGER_WW组 
+用户yrl: MANAGER_WW组
 ```
 
 场景设计如下，样例中所说的成功/失败表示预期的鉴权结果（成功：鉴权通过；失败：鉴权不通过）
 
-1. 用户ww生成*只能*访问资产单元`[0148P1016_ww]`的访问令牌，并访问资产单元`0148P1016_ww` —— 成功
-2. 用户ww生成*只能*访问资产单元`[0148P1016_ww, 88853899_ww]`的访问令牌，并访问资产单元`0148P1016_ww` —— 成功
-3. 用户ww生成*只能*访问资产单元`[0148P1016_ww]`的访问令牌，并访问资产单元`88853899_ww` —— 失败，该令牌没有访问`88853899_ww`的权限
-4. 用户ww生成可访问*所有*资产单元（`MANAGER_WW组`）的访问令牌，并访问资产单元`88853899_ww` —— 成功
-5. 用户ww生成可访问*所有*资产单元（`MANAGER_WW组`）的访问令牌，并访问资产单元`EAMLS1ZT_00` —— 失败，用户ww没有访问`EAMLS1ZT_00`的权限
-6. 用户ww生成*不能*访问资产单元`[0148P1016_ww]`的访问令牌，并访问资产单元`0148P1016_ww` —— 失败
-7. 用户ww生成*不能*访问资产单元`[0148P1016_ww]`的访问令牌，并访问资产单元`88853899_ww` —— 成功，`88853899_ww` 在 MANAGER_WW组中，但不在不能访问的列表中
-8. 用户ww生成*不能*访问资产单元`[0148P1016_ww]`的访问令牌，并访问资产单元`EAMLS1ZT_00` —— 失败，用户ww没有访问`EAMLS1ZT_00`的权限
-9. 用户wsy生成*只能*访问资产单元`[DRW001ZTX_04]`的访问令牌，并访问资产单元`DRW001ZTX_04` —— 成功
-10. 用户xjw生成*只能*访问资产单元`[EAMLS1ZT_00]`的访问令牌，并访问资产单元`EAMLS1ZT_00` —— 成功
+1. 用户 ww 生成*只能*访问资产单元`[0148P1016_ww]`的访问令牌，并访问资产单元`0148P1016_ww` —— 成功
+2. 用户 ww 生成*只能*访问资产单元`[0148P1016_ww, 88853899_ww]`的访问令牌，并访问资产单元`0148P1016_ww` —— 成功
+3. 用户 ww 生成*只能*访问资产单元`[0148P1016_ww]`的访问令牌，并访问资产单元`88853899_ww` —— 失败，该令牌没有访问`88853899_ww`的权限
+4. 用户 ww 生成可访问*所有*资产单元（`MANAGER_WW组`）的访问令牌，并访问资产单元`88853899_ww` —— 成功
+5. 用户 ww 生成可访问*所有*资产单元（`MANAGER_WW组`）的访问令牌，并访问资产单元`EAMLS1ZT_00` —— 失败，用户 ww 没有访问`EAMLS1ZT_00`的权限
+6. 用户 ww 生成*不能*访问资产单元`[0148P1016_ww]`的访问令牌，并访问资产单元`0148P1016_ww` —— 失败
+7. 用户 ww 生成*不能*访问资产单元`[0148P1016_ww]`的访问令牌，并访问资产单元`88853899_ww` —— 成功，`88853899_ww` 在 MANAGER_WW 组中，但不在不能访问的列表中
+8. 用户 ww 生成*不能*访问资产单元`[0148P1016_ww]`的访问令牌，并访问资产单元`EAMLS1ZT_00` —— 失败，用户 ww 没有访问`EAMLS1ZT_00`的权限
+9. 用户 wsy 生成*只能*访问资产单元`[DRW001ZTX_04]`的访问令牌，并访问资产单元`DRW001ZTX_04` —— 成功
+10. 用户 xjw 生成*只能*访问资产单元`[EAMLS1ZT_00]`的访问令牌，并访问资产单元`EAMLS1ZT_00` —— 成功
 
+代码实现上，设计了两张表来维护数据，分别为*访问令牌表*和*用户表*，表结构和上述实验的数据如下所示。
 
-*微服务架构下服务的权限管理*
+```text
+用户表 User {Id, UserName, Mobile}
+访问令牌表 AccessToken {Id, AppId, AppSecret, UserId, AuCodes, Allow, Expires}
 
-用nacos作为服务注册&发现中心，各个`资产单元`和`用户中心`都会在nacos进行注册。当用户的某个模型需要在资产单元`Au1`中下单时，带上 appid 和 appsecret，`Au1`会去访问`用户中心`的接口进行鉴权，当鉴权通过之后，则将该对appid和appsecret保存在内存中，下次如果再遇到该对时就不用再去用户中心鉴权而直接放行。
+== 实验数据 ==
+用户表 User 数据:
+[
+	{Id: 15739, UserName: "ww", Mobile: "15308681364"},
+	{Id: 15743, UserName: "xjw", Mobile: "13608681364"},
+	{Id: 15747, UserName: "wsy", Mobile: "13708681364"},
+]
+
+访问令牌表 AccessToken 数据:
+[
+	// ww(id:15739) has generated authToken to access 0148P1016_ww
+	{Id: 1, AppId: "asdj", AppSecret: "d54sdfejbd561sa", UserId: 15739, AuCodes: ["0148P1016_ww"], Allow: true, Expires: "Seven days later"},
+
+	// xjw(id:15743) has generated authToken to access EAMLS1ZT_00
+	{Id: 2, AppId: "kfuks", AppSecret: "4fd1ufklnksbry9", UserId: 15743, AuCodes: ["EAMLS1ZT_00"], Allow: true, Expires: "Seven days later"},
+
+	// ww(id:15739) has generated authToken to access all au which ww can access.
+	{Id: 3, AppId: "jkwsx", AppSecret: "luwxtuf5twprw5l", UserId: 15739, AuCodes: ["*"], Allow: true, Expires: "Seven days later"},
+
+	// ww(id:15739) has generated authToken to access all au which ww can access except 0148P1016_ww.
+	{Id: 4, AppId: "ggTks", AppSecret: "psuhl055bwaeTIjk", UserId: 15739, AuCodes: ["0148P1016_ww"], Allow: false, Expires: "Seven days later"},
+
+	// ww(id:15739) has generated authToken to access [0148P1016_ww, 88853899_ww]
+	{Id: 5, AppId: "xstt", AppSecret: "abeo5tgrt754arh57", UserId: 15739, AuCodes: ["0148P1016_ww", "88853899_ww"], Allow: true, Expires: "Seven days later"},
+
+	// wsy(id:15747) has generated authToken to access DRW001ZTX_04
+	{Id: 5, AppId: "ko8w", AppSecret: "8hw416ery9ah4foig", UserId: 15747, AuCodes: ["DRW001ZTX_04"], Allow: true, Expires: "Seven days later"},
+
+	// xjw(id:15743) has generated authToken to access EAMLS1ZT_00
+	{Id: 5, AppId: "eut2", AppSecret: "tyt1ra48is13awer6", UserId: 15743, AuCodes: ["EAMLS1ZT_00"], Allow: true, Expires: "Seven days later"},
+]
+```
+
+_微服务架构下服务的权限管理_
+
+用 nacos 作为服务注册&发现中心，各个`资产单元`和`用户中心`都会在 nacos 进行注册。当用户的某个模型需要在资产单元`Au1`中下单时，带上 appid 和 appsecret，`Au1`会去访问`用户中心`的接口进行鉴权，当鉴权通过之后，则将该对 appid 和 appsecret 保存在内存中，下次如果再遇到该对时就不用再去用户中心鉴权而直接放行。
 
 ## 参考
 
-- [SSL/TLS协议运行机制的概述](https://www.ruanyifeng.com/blog/2014/02/ssl_tls.html)
+- [SSL/TLS 协议运行机制的概述](https://www.ruanyifeng.com/blog/2014/02/ssl_tls.html)
 - [grpc-auth-support.md(grpc-go Documentation)](https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-auth-support.md)
 - [gRPC authentication guide](https://grpc.io/docs/guides/auth/)
-- [jwt在线解密](https://www.box3.cn/tools/jwt.html)
+- [jwt 在线解密](https://www.box3.cn/tools/jwt.html)
 - [Casbin 文档](https://casbin.org/zh/docs/overview)
 - [Basic Role-Based HTTP Authorization in Go with Casbin](https://zupzup.org/casbin-http-role-auth/)
