@@ -1,25 +1,28 @@
 # go micro server
 
-## nacos
+在*调研v1.0*中，已经完成casbin进行鉴权的过程，并且设计了GSF进行鉴权的方式方法。但是该套方案在讨论之后发现存在延迟高和引用服务过多的问题，所以目前设计的方案为：用户中心管理并维护用户可访问资产单元列表的数据，并生成每个资产单元各自的*用户访问权限信息表*推送到nacos；GSF只需要读取并监听nacos中对应的资产单元的*用户访问权限信息表*即可。当有用户需要在gsf中下单时，首先gsf会从请求的token中获取到用户的信息，接着去*用户访问权限信息表*查看该用户是否有权限，即可完全鉴权。目前还需要调研如下内容。
 
-注册中心
-
-- [x] 理想情况下的服务注册与访问（grpc、http）
-- [ ] 注册服务的访问权限控制
-- [ ] 服务可用性监测
-
-配置中心
-
-- [x] 服务启动时读取 nacos 配置
-- [ ] 服务运行中实时同步最新的 nacos 配置
-
-## 实践
+- [x] casbin鉴权的单元测试改造。在*调研v1.0*中单元测试写的比较分散并且可读性不高的问题。由于*调研v1.0*中鉴权的起点是appid和appsecret，而在该版本中起点是token，所以原本的测试用例也需要调整。
+- [] 通过接口修改权限信息。casbin在启动时会读取policy.csv文件的权限配置，在运行过程存在需要更新某些权限配置。
+- [] nacos 上传数据。用户中心将casbin保存的权限配置根据各个资产单元生成一份*用户访问权限信息表*上传到nacos中。
+- [] 设计上传到nacos中数据内容。gsf读取nacos对应的权限信息后自行完成请求用户的权限校验。
 
 ---
 
-客户端每次运行前都需要将 cache/naming 中的内容删除，否则无法启动。报错信息为: rpc error: code = DeadlineExceeded desc = context deadline exceeded
+**实验**
 
----
+casbin设定的policy.csv文件如下
+```csv
+
+```
+
+
+上传到nacos的格式`<用户/角色(组)>: <操作权限>`
+
+
+## 附录
+
+### 1. 定位问题 nacos-sdk-go 调用注册到 nacos 的服务器 http 接口时报 `code = 503 reason = NODE_NOT_FOUND message = error: code = 503 reason = no_available_node message =  metadata = map[] cause = <nil> metadata = map[] cause = <nil>` 
 
 客户端通过 nacos 去调用服务器的 http 方式接口时，会出现问题 `code = 503 reason = NODE_NOT_FOUND message = error: code = 503 reason = no_available_node message =  metadata = map[] cause = <nil> metadata = map[] cause = <nil>`，问题定位如下。解决办法有两种，第一种是采用 grpc 去访问（推荐）；第二种是手动取服务节点转换成最终的 url(比如 `http://127.0.0.1:8000`)去访问。
 
@@ -127,11 +130,17 @@ func (client *Client) do(req *http.Request) (*http.Response, error) {
 }
 ```
 
----
+### 2. `rpc error: code = DeadlineExceeded desc = context deadline exceeded` 问题解决
+
+客户端每次运行前都需要将 cache/naming 中的内容删除，否则无法启动显示: rpc error: code = DeadlineExceeded desc = context deadline exceeded
+
+### 3. 调研v1.0
 
 目前存在两个需求点：1. 资产单元的权限管理; 2. 微服务架构下服务的权限管理;
 
-_资产单元的权限管理_，即为 right 用户的 right 模型在 right 资产单元进行下单交易。那么就需要考虑如下几个问题：
+_资产单元的权限管理_
+
+即 right 用户的 right 模型在 right 资产单元进行下单交易。那么就需要考虑如下几个问题：
 
 1. 如何保证 right 用户? 即资产单元允许哪些用户进行访问（资产单元的权限管理）
 2. 如何保证 right 模型? 模型是用户自己创建的，是否为正确的模型是由用户进行管理，平台可以提供一套机制协助进行管理。
@@ -152,14 +161,35 @@ casbin 提供了 RBAC 的权限设计方案，可以将用户作为 sub，资产
 管理员设置了资产单元的访问规则如下。为了更好的进行资产单元的管理，将资产单元按组为单位进行划分后，再将整个组分配给特定用户。
 
 ```text
-# 解读：用户ww可以访问 MANAGER_WW组中的资产单元
-用户ww: MANAGER_WW组 = {0148P1016_ww, 88853899_ww, DRWZQ1ZT_03}
-# 解读：用户xjw可以访问 PRODUCT_EAMLS1组中的资产单元
-用户xjw: PRODUCT_EAMLS1组 = {300016, 88853899_ww, EAMLS1ZT_00, EAMLS1ZTX_00}
-# 解读：用户wsy可以访问资产单元DRW001ZTX_04
-用户wsy: DRW001ZTX_04
-# 解读：用户yrl可以访问 MANAGER_WW组中的资产单元
-用户yrl: MANAGER_WW组
+==== policy.csv 内容 ====
+# 产品 & 资产单元对应关系
+p, PRODUCT_EAMLS1, AU_300016, *
+p, PRODUCT_EAMLS1, AU_88853899_ww, r
+p, PRODUCT_EAMLS1, AU_EAMLS1ZT_00, w
+p, PRODUCT_EAMLS1, AU_EAMLS1ZTX_00, *
+p, PRODUCT_DRW004, AU_121000, *
+
+# 投资经理 & 资产单元对应关系
+p, MANAGER_WW, AU_0148P1016_ww, *
+p, MANAGER_WW, AU_88853899_ww, r
+p, MANAGER_WW, AU_DRWZQ1ZT_03, w
+# p, MANAGER_WSY, AU_DRW001ZTX_04, *
+
+# 临时配置某个用户对某个资产单元的配置
+p, USER_wsy, AU_DRW001ZTX_04, *
+
+# 定义关联: 用户 - 可访问的资产单元(组)
+g, USER_ww, MANAGER_WW
+g, USER_xjw, PRODUCT_EAMLS1
+g, USER_yrl, MANAGER_WW
+# g, USER_wsy, MANAGER_WSY
+
+
+==== policy.csv 解读 ====
+用户ww可以访问 MANAGER_WW组中的资产单元（MANAGER_WW组 = {0148P1016_ww, 88853899_ww, DRWZQ1ZT_03}）
+用户xjw可以访问 PRODUCT_EAMLS1组中的资产单元（PRODUCT_EAMLS1组 = {300016, 88853899_ww, EAMLS1ZT_00, EAMLS1ZTX_00}）
+用户wsy可以访问资产单元DRW001ZTX_04
+用户yrl可以访问 MANAGER_WW组中的资产单元
 ```
 
 场景设计如下，样例中所说的成功/失败表示预期的鉴权结果（成功：鉴权通过；失败：鉴权不通过）
@@ -216,7 +246,20 @@ casbin 提供了 RBAC 的权限设计方案，可以将用户作为 sub，资产
 
 _微服务架构下服务的权限管理_
 
-用 nacos 作为服务注册&发现中心，各个`资产单元`和`用户中心`都会在 nacos 进行注册。当用户的某个模型需要在资产单元`Au1`中下单时，带上 appid 和 appsecret，`Au1`会去访问`用户中心`的接口进行鉴权，当鉴权通过之后，则将该对 appid 和 appsecret 保存在内存中，下次如果再遇到该对时就不用再去用户中心鉴权而直接放行。
+用 nacos 作为服务注册&发现中心，各个`资产单元`和`用户中心`都会在 nacos 进行注册。当用户的某个模型需要在资产单元`Au1`中下单时，带上 appid 和 appsecret，`Au1`会去访问`用户中心`的接口进行鉴权，当鉴权通过之后，则将该对 appid 和 appsecret 保存在内存中，下次如果再遇到该对时就不用再去用户中心鉴权而直接放行。这样的设计会导致
+
+### 4. nacos 调研进度
+
+注册中心
+
+- [x] 理想情况下的服务注册与访问（grpc、http）
+- [ ] 注册服务的访问权限控制
+- [ ] 服务可用性监测
+
+配置中心
+
+- [x] 服务启动时读取 nacos 配置
+- [ ] 服务运行中实时同步最新的 nacos 配置
 
 ## 参考
 

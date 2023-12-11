@@ -12,6 +12,19 @@ import (
 
 type Server struct {
 	uc.UnimplementedUserCenterServer
+
+	Cbe *bincas.CBEnforce
+}
+
+func NewServer() (*Server, error) {
+	cbe, err := bincas.NewCasbinEnforcer()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Server{
+		Cbe: cbe,
+	}, nil
 }
 
 func (s *Server) Login(ctx context.Context, in *uc.LoginRequest) (*uc.LoginReply, error) {
@@ -27,7 +40,7 @@ func (s *Server) Login(ctx context.Context, in *uc.LoginRequest) (*uc.LoginReply
 		return nil, err
 	}
 
-	ok, err := bincas.CanAccessAu(user.UserName, in.AuCode)
+	ok, err := s.Cbe.CanAccessAu(user.UserName, in.AuCode, "*")
 	if err != nil {
 		return nil, errors.Errorf(500, "Server Internal Error", err.Error())
 	}
@@ -51,5 +64,30 @@ func (s *Server) Login(ctx context.Context, in *uc.LoginRequest) (*uc.LoginReply
 		Expires:      auth.ExpiresIn,
 		Scrope:       auth.Scope,
 		Uid:          user.Id,
+	}, nil
+}
+
+func (s *Server) Authraw(ctx context.Context, in *uc.AuthrawRequest) (*uc.AuthrawReply, error) {
+	user, usertype, err := getUserById(ctx, in.Uid)
+	if err != nil {
+		return nil, errors.Errorf(500, "Server Internal Error", err.Error())
+	}
+
+	var sub string = ""
+	switch usertype {
+	case "user":
+		sub = fmt.Sprintf("USER_%s", user.UserName)
+	case "dept":
+		sub = fmt.Sprintf("DEPT_%s", user.UserName)
+	default:
+	}
+
+	ok, err := s.Cbe.CanAccessAu(sub, in.AuCode, in.OpType)
+	if err != nil {
+		return nil, errors.Errorf(500, "Server Internal Error", err.Error())
+	}
+
+	return &uc.AuthrawReply{
+		Ok: ok,
 	}, nil
 }

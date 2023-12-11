@@ -19,15 +19,18 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationUserCenterAuthraw = "/uc.v1.UserCenter/Authraw"
 const OperationUserCenterLogin = "/uc.v1.UserCenter/Login"
 
 type UserCenterHTTPServer interface {
+	Authraw(context.Context, *AuthrawRequest) (*AuthrawReply, error)
 	Login(context.Context, *LoginRequest) (*LoginReply, error)
 }
 
 func RegisterUserCenterHTTPServer(s *http.Server, srv UserCenterHTTPServer) {
 	r := s.Route("/")
 	r.POST("/api/uc/v1/login", _UserCenter_Login0_HTTP_Handler(srv))
+	r.POST("/api/uc/v1/auth", _UserCenter_Authraw0_HTTP_Handler(srv))
 }
 
 func _UserCenter_Login0_HTTP_Handler(srv UserCenterHTTPServer) func(ctx http.Context) error {
@@ -52,7 +55,30 @@ func _UserCenter_Login0_HTTP_Handler(srv UserCenterHTTPServer) func(ctx http.Con
 	}
 }
 
+func _UserCenter_Authraw0_HTTP_Handler(srv UserCenterHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in AuthrawRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationUserCenterAuthraw)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Authraw(ctx, req.(*AuthrawRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*AuthrawReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type UserCenterHTTPClient interface {
+	Authraw(ctx context.Context, req *AuthrawRequest, opts ...http.CallOption) (rsp *AuthrawReply, err error)
 	Login(ctx context.Context, req *LoginRequest, opts ...http.CallOption) (rsp *LoginReply, err error)
 }
 
@@ -62,6 +88,19 @@ type UserCenterHTTPClientImpl struct {
 
 func NewUserCenterHTTPClient(client *http.Client) UserCenterHTTPClient {
 	return &UserCenterHTTPClientImpl{client}
+}
+
+func (c *UserCenterHTTPClientImpl) Authraw(ctx context.Context, in *AuthrawRequest, opts ...http.CallOption) (*AuthrawReply, error) {
+	var out AuthrawReply
+	pattern := "/api/uc/v1/auth"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationUserCenterAuthraw))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
 }
 
 func (c *UserCenterHTTPClientImpl) Login(ctx context.Context, in *LoginRequest, opts ...http.CallOption) (*LoginReply, error) {

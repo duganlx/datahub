@@ -147,5 +147,5 @@ func startSrv(cfgsrc string) {
 
 func main() {
 	// nested local nacos
-	startSrv("nacos")
+	startSrv("nested")
 }

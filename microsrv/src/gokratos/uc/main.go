@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	uc "gokratos/api/uc/v1"
 	"gokratos/uc/server"
@@ -132,11 +133,98 @@ func startSrv(httpaddr, grpcaddr string) {
 // 	return v.Server.Http.Addr, v.Server.Grpc.Addr
 // }
 
+func unitTest(s *server.Server) {
+
+	ctx := context.Background()
+
+	// 用户: ww(15739) xjw(15743) wsy(15747) yrl(15753)
+	// 部门: admin(10), operations(11), it(12)
+	testSet := []struct {
+		AuCode string
+		OpType string
+		Uid    int64
+		Expect bool // 预期结果
+	}{
+		// 用户 ww 访问 0148P1016_ww 操作类型 r  ==>  成功
+		{AuCode: "0148P1016_ww", OpType: "r", Uid: 15739, Expect: true},
+		// 用户 ww 访问 0148P1016_ww 操作类型 w  ==>  成功
+		{AuCode: "0148P1016_ww", OpType: "w", Uid: 15739, Expect: true},
+		// 用户 ww 访问 0148P1016_ww 操作类型 x  ==>  成功
+		{AuCode: "0148P1016_ww", OpType: "x", Uid: 15739, Expect: true},
+		// 用户 yrl 访问 0148P1016_ww 操作类型 r  ==>  成功
+		{AuCode: "0148P1016_ww", OpType: "r", Uid: 15753, Expect: true},
+		// 用户 yrl 访问 0148P1016_ww 操作类型 w  ==>  成功
+		{AuCode: "0148P1016_ww", OpType: "w", Uid: 15753, Expect: true},
+		// 用户 yrl 访问 0148P1016_ww 操作类型 x  ==>  成功
+		{AuCode: "0148P1016_ww", OpType: "x", Uid: 15753, Expect: true},
+		// 用户 ww 访问 88853899_ww 操作类型 r  ==>  成功
+		{AuCode: "88853899_ww", OpType: "r", Uid: 15739, Expect: true},
+		// 用户 ww 访问 88853899_ww 操作类型 w  ==>  失败，对该资产单元无该操作类型权限
+		{AuCode: "88853899_ww", OpType: "w", Uid: 15739, Expect: false},
+		// 用户 ww 访问 121000 操作类型 w  ==>  失败，对该资产单元无任何访问权限
+		{AuCode: "121000", OpType: "w", Uid: 15739, Expect: false},
+		// 用户 wsy 访问 DRW001ZTX_04 操作类型 x  ==>  成功
+		{AuCode: "DRW001ZTX_04", OpType: "x", Uid: 15747, Expect: true},
+		// 用户 xjw 访问 EAMLS1ZT_00 操作类型 r  ==>  成功
+		{AuCode: "EAMLS1ZT_00", OpType: "r", Uid: 15743, Expect: true},
+		// 用户 xjw 访问 EAMLS1ZT_00 操作类型 w  ==>  成功
+		{AuCode: "EAMLS1ZT_00", OpType: "w", Uid: 15743, Expect: true},
+		// 用户 xjw 访问 EAMLS1ZT_00 操作类型 x  ==>  失败，对该资产单元仅有rw操作权限
+		{AuCode: "EAMLS1ZT_00", OpType: "x", Uid: 15743, Expect: false},
+		// 用户 xjw 访问 EAMLS1ZT_00 操作类型 所有*  ==>  失败，对该资产单元仅有rw操作权限
+		{AuCode: "EAMLS1ZT_00", OpType: "*", Uid: 15743, Expect: false},
+		// 部门 admin 访问 EAMLS1ZT_00 操作类型 x  ==>  成功
+		{AuCode: "EAMLS1ZT_00", OpType: "x", Uid: 10, Expect: true},
+		// 部门 operations 访问 0148P1016_ww 操作类型 r  ==>  成功
+		{AuCode: "0148P1016_ww", OpType: "r", Uid: 11, Expect: true},
+		// 部门 operations 访问 0148P1016_ww 操作类型 w  ==>  失败，部门对所有资产单元只有r操作权限
+		{AuCode: "0148P1016_ww", OpType: "w", Uid: 11, Expect: false},
+		// 部门 it 访问 0148P1016_ww 操作类型 r  ==>  成功
+		{AuCode: "0148P1016_ww", OpType: "r", Uid: 12, Expect: true},
+		// 部门 it 访问 0148P1016_ww 操作类型 w  ==>  成功
+		{AuCode: "0148P1016_ww", OpType: "w", Uid: 12, Expect: true},
+		// 部门 it 访问 121000 操作类型 r  ==>  成功
+		{AuCode: "121000", OpType: "r", Uid: 12, Expect: true},
+		// 部门 it 访问 121000 操作类型 w  ==>  失败，部门对该资产单元仅有r操作权限
+		{AuCode: "121000", OpType: "w", Uid: 12, Expect: false},
+	}
+
+	for index, unit := range testSet {
+		in := &uc.AuthrawRequest{
+			AuCode: unit.AuCode,
+			OpType: unit.OpType,
+			Uid:    unit.Uid,
+		}
+		reply, err := s.Authraw(ctx, in)
+		if err != nil {
+			fmt.Printf("[Demo%d] X: %+v\n", index, err)
+			continue
+		}
+		if unit.Expect != reply.Ok {
+			fmt.Printf("[Demo%d] X: %+v\n", index, unit)
+			continue
+		}
+
+		fmt.Printf("[Demo%d] √\n", index)
+	}
+
+}
+
 func main() {
 
-	opt := "nested"
+	opt := "unitTest"
 
 	switch opt {
+	case "unitTest":
+		s, err := server.NewServer()
+		if err != nil {
+			panic(err)
+		}
+
+		unitTest(s)
+		s.Cbe.UpdateAuth()
+		unitTest(s)
+
 	case "nested":
 		startSrv(":8050", ":9050")
 	// case "local":

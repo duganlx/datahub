@@ -1,21 +1,27 @@
-# 产品 & 资产单元对应关系
+# 分组(产品)
 p, PRODUCT_EAMLS1, AU_300016, *
-p, PRODUCT_EAMLS1, AU_88853899_ww, *
-p, PRODUCT_EAMLS1, AU_EAMLS1ZT_00, *
-p, PRODUCT_EAMLS1, AU_EAMLS1ZTX_00, *
+p, PRODUCT_EAMLS1, AU_88853899_ww, r
+p, PRODUCT_EAMLS1, AU_EAMLS1ZT_00, w
+p, PRODUCT_EAMLS1, AU_EAMLS1ZT_00, r
+p, PRODUCT_EAMLS1, AU_EAMLS1ZTX_00, r
 p, PRODUCT_DRW004, AU_121000, *
 
-# 投资经理 & 资产单元对应关系
+# 分组(投资经理)
 p, MANAGER_WW, AU_0148P1016_ww, *
-p, MANAGER_WW, AU_88853899_ww, *
-p, MANAGER_WW, AU_DRWZQ1ZT_03, *
-# p, MANAGER_WSY, AU_DRW001ZTX_04, *
+p, MANAGER_WW, AU_88853899_ww, r
+p, MANAGER_WW, AU_DRWZQ1ZT_03, w
 
-# 临时配置某个用户对某个资产单元的配置
+
+# ==== 用户分配权限 ====
+# 方式1: 直接分配
 p, USER_wsy, AU_DRW001ZTX_04, *
-
-# 定义关联: 用户 - 可访问的资产单元(组)
+# 方式2: 按组分配
 g, USER_ww, MANAGER_WW
 g, USER_xjw, PRODUCT_EAMLS1
 g, USER_yrl, MANAGER_WW
-# g, USER_wsy, MANAGER_WSY
+
+# ==== 部门分配权限 ====
+p, DEPT_admin, *, *
+p, DEPT_operations, *, r
+p, DEPT_it, AU_0148P1016_ww, w
+p, DEPT_it, *, r

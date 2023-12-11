@@ -13,6 +13,13 @@ service UserCenter {
       body: "*"
     };
   }
+
+  rpc Authraw(AuthrawRequest) returns (AuthrawReply) {
+    option (google.api.http) = {
+      post: "/api/uc/v1/auth"
+      body: "*"
+    };
+  }
 }
 
 message LoginRequest {
@@ -21,7 +28,6 @@ message LoginRequest {
   string appSecret = 3;
   string auCode = 4;
 }
-
 message LoginReply {
   string accessToken = 1;
   string refreshToken = 2;
@@ -29,4 +35,13 @@ message LoginReply {
   int64 expires = 4;
   string scrope = 5;
   int64 uid = 6;
+}
+
+message AuthrawRequest {
+  string auCode = 1;
+  string opType = 2;
+  int64 uid = 3;
+}
+message AuthrawReply {
+  bool ok = 1;
 }

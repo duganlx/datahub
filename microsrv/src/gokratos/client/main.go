@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	opt := "placeorder"
+	opt := "authfunc"
 
 	switch opt {
 	case "authfunc":
