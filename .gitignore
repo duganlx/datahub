@@ -8,6 +8,7 @@ envdev/tmp/*
 # 数学研究 mathstudy
 mathstudy/__pycache__
 mathstudy/utils/__pycache__
+mathstudy/data
 
 # 微服务 micro server
 microsrv/src/nacosconf/*
@@ -21,3 +22,4 @@ microsrv/src/gokratos/uc/cache
 
 # 其他仓库
 kiGo
+njuicspa/enmu

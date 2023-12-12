@@ -20,6 +20,7 @@ cat <<EOF
   5 [生成nodejs容器]
   6 [生成mysql容器]
   7 [生成python容器]
+  8 [生成 nju ics-pa 容器]
 EOF
 read -p "选择进行的操作: " opt
 
@@ -336,7 +337,37 @@ EOT
     docker exec -it $container_name /bin/bash -c "bash /download/$condash -b -p /usr/local/miniconda"
     docker exec -it $container_name /bin/bash -c "echo 'export PATH=\$PATH:/usr/local/miniconda/bin' >> /root/.bashrc"
     docker exec -it $container_name /bin/bash -c "pip config set global.index-url https://mirrors.ustc.edu.cn/pypi/web/simple"
-    docker exec -it $container_name /bin/bash -c "conda init"
+    docker exec -it $container_name /bin/bash -c "apt-get install -y gcc"
+    docker exec -it $container_name /bin/bash -c "echo 'conda init' >> /root/.bashrc"
+  ;;
+  8)
+    # https://nju-projectn.github.io/ics-pa-gitbook/ics2021/index.html
+    container_name=njuicspa
+    if docker ps -a --format '{{.Names}}' | grep -q $container_name; then
+      read -p "容器$container_name 已存在, 按回车键将进行删除..."
+      docker rm -f $container_name
+    fi
+    mountwspath=$ROOT_DIR/njuicspa
+
+    docker_run_cmd="docker run -itd --name $container_name --privileged=true"
+    docker_run_cmd="$docker_run_cmd -v $mountwspath:/workspace"
+    docker_run_cmd="$docker_run_cmd -v /root/.ssh:/root/.ssh"
+    docker_run_cmd="$docker_run_cmd $BASIC_IMAGE_NAME:$BASIC_IMAGE_TAG /bin/bash"
+
+    echo -e "将执行的命令如下所示\n\n\t$docker_run_cmd\n"
+    read -p "按回车键开始执行该命令创建容器..."
+    $docker_run_cmd
+
+    echo -e "初始化容器"
+    docker exec -it $container_name /bin/bash -c "apt-get update"
+    docker exec -it $container_name /bin/bash -c "apt-get install -y build-essential"
+    docker exec -it $container_name /bin/bash -c "apt-get install -y man"
+    docker exec -it $container_name /bin/bash -c "apt-get install -y gcc-doc"
+    docker exec -it $container_name /bin/bash -c "apt-get install -y gdb"
+    docker exec -it $container_name /bin/bash -c "apt-get install -y libreadline-dev"
+    docker exec -it $container_name /bin/bash -c "apt-get install -y libsdl2-dev"
+    docker exec -it $container_name /bin/bash -c "apt-get install -y llvm"
+    docker exec -it $container_name /bin/bash -c "apt-get install -y tmux"
   ;;
   *)
     echo "输入无效"

@@ -17,6 +17,17 @@ conda 常用命令
 conda env list
 ```
 
+## nodejs
+
+目前nodejs容器生成中会出现网络问题
+
+```
+npm config set registry https://registry.npm.taobao.org
+
+yarn config set registry https://registry.npm.taobao.org/
+yarn config get registry
+```
+
 ## 备注
 
 vscode 若不能将 docker目录下的文件当作 Dockerfile，请将以下代码复制到 .vscode/settings.json
