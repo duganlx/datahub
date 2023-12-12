@@ -23,7 +23,8 @@ X-Au-Code: <auCode>  (有些有)
 
 grpc 请求
 
-- 获取持仓信息 service_name: 'Oms', data_name: 'get_position'
+- 获取Balances信息 `service_name: 'Oms', data_name: 'get_balances', format: 'mapArray'`
+- 获取持仓信息 `service_name: 'Oms', data_name: 'get_position', format: 'mapArray'`
 
 ```typescript
 //

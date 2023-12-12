@@ -32,6 +32,11 @@ func (e CBEnforce) UpdateAuth() {
 	e.cbe.RemovePolicy("USER_wsy", "AU_DRW001ZTX_04", "*")
 	// 删除 用户 yrl 投资经理 MANAGER_WW 的权限
 	e.cbe.DeleteRoleForUser("USER_yrl", "MANAGER_WW")
+	// 删除 部门 operations 访问 0148P1016_ww 的 r权限
+	e.cbe.RemovePolicy("DEPT_operations", "*", "r")
+	// 添加 部门 operations 访问 0148P1016_ww 的 w权限
+	e.cbe.RemovePolicy("DEPT_operations", "AU_0148P1016_ww", "w")
+	// 删除 用户 ww 访问 0148P1016_ww 的所有操作权限
+	e.cbe.RemovePolicy("MANAGER_WW", "AU_0148P1016_ww", "*")
 
-	// todo
 }

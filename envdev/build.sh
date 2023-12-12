@@ -195,8 +195,22 @@ EOT
     read -p "请输入容器$container_name 的端口映射配置(空格分隔): " ports_map
     port_map_array=($ports_map)
 
+    # /workspace 挂载位置选择
     container_wsdir=$TMP_DIR/workspace/$container_name
-    mkdir -p $container_wsdir
+    read -p "容器工作目录(/workspace)是否挂载在默认位置($container_wsdir)，请输入(y/n): " mountwsopt
+    case $mountwsopt in
+      y)
+        mkdir -p $container_wsdir
+      ;;
+      n)
+        read -p "请输入挂载位置: $ROOT_DIR/" mountwspath
+        container_wsdir=$ROOT_DIR/$mountwspath
+      ;;
+      *)
+        echo "输入无效"
+        exit 1
+      ;;
+    esac
 
     docker_run_cmd="docker run -itd --name $container_name --privileged=true"
     for port_map in ${port_map_array[@]}; do
@@ -321,6 +335,8 @@ EOT
     docker exec -it $container_name /bin/bash -c "chmod 750 /download/$condash"
     docker exec -it $container_name /bin/bash -c "bash /download/$condash -b -p /usr/local/miniconda"
     docker exec -it $container_name /bin/bash -c "echo 'export PATH=\$PATH:/usr/local/miniconda/bin' >> /root/.bashrc"
+    docker exec -it $container_name /bin/bash -c "pip config set global.index-url https://mirrors.ustc.edu.cn/pypi/web/simple"
+    docker exec -it $container_name /bin/bash -c "conda init"
   ;;
   *)
     echo "输入无效"
