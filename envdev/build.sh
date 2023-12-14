@@ -182,7 +182,7 @@ EOT
     echo "进行容器内的配置..."
     docker exec -it $container_name /bin/bash -c 'chmod 750 /download/inrun.sh'
     docker exec -it $container_name /bin/bash -c 'bash /download/inrun.sh'
-    docker exec -it $container_name /bin/bash -c 'apt-get install -y gcc automake autoconf libtool make'
+    docker exec -it $container_name /bin/bash -c 'apt-get update && apt-get install -y gcc automake autoconf libtool make'
   ;;
   5)
     # 在basic镜像上生成 nodejs 开发容器

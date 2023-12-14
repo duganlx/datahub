@@ -145,7 +145,50 @@ func startSrv(cfgsrc string) {
 	}
 }
 
+func startMultiSrv(httpaddr, grpcaddr, aucode string) {
+	// 在nacos中注册多个服务
+	s := server.NewAuServer(aucode)
+	httpSrv := http.NewServer(
+		http.Address(httpaddr),
+		http.Middleware(
+			recovery.Recovery(),
+		),
+	)
+	grpcSrv := grpc.NewServer(
+		grpc.Address(grpcaddr),
+		grpc.Middleware(
+			recovery.Recovery(),
+		),
+	)
+
+	au.RegisterAssetUnitServer(grpcSrv, s)
+	au.RegisterAssetUnitHTTPServer(httpSrv, s)
+
+	incli, err := ncs.NewNacosInamingClient()
+	if err != nil {
+		panic(err)
+	}
+	r := nacos.New(incli,
+		nacos.WithGroup("groupA"),
+		nacos.WithCluster("clusterA"),
+	)
+	app := kratos.New(
+		kratos.Name(aucode),
+		kratos.Server(
+			httpSrv,
+			grpcSrv,
+		),
+		kratos.Registrar(r),
+	)
+
+	if err := app.Run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	// nested local nacos
-	startSrv("nested")
+	// startSrv("nested")
+	// startMultiSrv(":8000", ":9000", "au1")
+	startMultiSrv(":8001", ":9001", "au2")
 }

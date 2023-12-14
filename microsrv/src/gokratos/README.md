@@ -11,7 +11,80 @@
 
 **实验**
 
+casbin的policy.csv存放到mysql的表中 `casbin_rule{p_type, v0, v1, v2, v3, v4, v5}`，在项目*启动时*会加载该表的配置（后续如果直接对表数据进行修改，并不会生效）
 
+测试场景搭建
+```text
+用户(user)
+boss: 1416962189826199552
+ww: 1523580757186973696
+xjw: 1506439972247310336
+lvx: 1559730848930992128
+
+用户组(user_group)
+admin: boss, xjw
+quant: ww, boss
+test: lvx, xjw, ww
+
+
+资源(src)
+EAM001:v1:ip:test
+EAM002:v1:ip:test
+EAM003:v1:ip:test
+EAM011:v1:ip:prod
+EAM012:v1:ip:prod
+DRW001:v1:ip:test
+DRW001:v1:ip:prod
+
+资源组(src_group)
+test: 最后一项为test，即EAM001:v1:ip:test, EAM002:v1:ip:test, EAM003:v1:ip:test, DRW001:v1:ip:test
+prod: 最后一项为prod，即EAM011:v1:ip:prod, EAM012:v1:ip:prod
+EAM: 第一项是EAM开头，即EAM001:v1:ip:test, EAM002:v1:ip:test, EAM003:v1:ip:test, EAM011:v1:ip:prod, EAM012:v1:ip:prod
+DRW: 第一项是DRW开头，即DRW001:v1:ip:test, DRW001:v1:ip:prod
+
+
+权限关系
+lvx(user): DRW001:v1:ip:prod(src)
+boss(user): prod(src_group)
+admin(user_group): *(src)
+quant(user_group): EAM(src_group), DRW(src_group)
+test(user_group): test(src_group), EAM011:v1:ip:prod(src)
+```
+
+对应sql
+```sql
+-- 资源组(src_group)
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:test', 'EAM001:v1:ip:test', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:test', 'EAM002:v1:ip:test', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:test', 'EAM003:v1:ip:test', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:test', 'DRW001:v1:ip:test', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:prod', 'EAM011:v1:ip:prod', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:prod', 'EAM012:v1:ip:prod', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:EAM', 'EAM001:v1:ip:test', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:EAM', 'EAM002:v1:ip:test', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:EAM', 'EAM003:v1:ip:test', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:EAM', 'EAM011:v1:ip:prod', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:EAM', 'EAM012:v1:ip:prod', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:DRW', 'DRW001:v1:ip:test', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:DRW', 'DRW001:v1:ip:prod', '*', '', '', '');
+
+-- 用户组(user_group)
+INSERT INTO casbin_rule VALUES('p', 'USERGROUP:admin', '*', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('g', 'USERGROUP:quant', 'SRCGROUP:EAM', '', '', '', '');
+INSERT INTO casbin_rule VALUES('g', 'USERGROUP:quant', 'SRCGROUP:DRW', '', '', '', '');
+INSERT INTO casbin_rule VALUES('g', 'USERGROUP:test', 'SRCGROUP:test', '', '', '', '');
+INSERT INTO casbin_rule VALUES('p', 'USERGROUP:test', 'EAM011:v1:ip:prod', '*', '', '', '');
+
+-- 用户权限分配
+INSERT INTO casbin_rule VALUES('p', 'USER:1559730848930992128', 'DRW001:v1:ip:prod', '*', '', '', '');
+INSERT INTO casbin_rule VALUES('g', 'USER:1416962189826199552', 'USERGROUP:admin', '', '', '', '');
+INSERT INTO casbin_rule VALUES('g', 'USER:1506439972247310336', 'USERGROUP:admin', '', '', '', '');
+INSERT INTO casbin_rule VALUES('g', 'USER:1416962189826199552', 'USERGROUP:quant', '', '', '', '');
+INSERT INTO casbin_rule VALUES('g', 'USER:1523580757186973696', 'USERGROUP:quant', '', '', '', '');
+INSERT INTO casbin_rule VALUES('g', 'USER:1559730848930992128', 'USERGROUP:test', '', '', '', '');
+INSERT INTO casbin_rule VALUES('g', 'USER:1523580757186973696', 'USERGROUP:test', '', '', '', '');
+INSERT INTO casbin_rule VALUES('g', 'USER:1506439972247310336', 'USERGROUP:test', '', '', '', '');
+```
 
 ## 附录
 
