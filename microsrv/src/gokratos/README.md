@@ -1,19 +1,200 @@
 # go micro server
 
-在*调研v1.0*中，已经完成casbin进行鉴权的过程，并且设计了GSF进行鉴权的方式方法。但是该套方案在讨论之后发现存在延迟高和引用服务过多的问题，所以目前设计的方案为：用户中心管理并维护用户可访问资产单元列表的数据，并生成每个资产单元各自的*用户访问权限信息表*推送到nacos；GSF只需要读取并监听nacos中对应的资产单元的*用户访问权限信息表*即可。当有用户需要在gsf中下单时，首先gsf会从请求的token中获取到用户的信息，接着去*用户访问权限信息表*查看该用户是否有权限，即可完全鉴权。目前还需要调研如下内容。
+在*调研 v1.0*中，已经完成 casbin 进行鉴权的过程，并且设计了 GSF 进行鉴权的方式方法。但是该套方案在讨论之后发现存在延迟高和引用服务过多的问题，所以目前设计的方案为：用户中心管理并维护用户可访问资产单元列表的数据，并生成每个资产单元各自的*用户访问权限信息表*推送到 nacos；GSF 只需要读取并监听 nacos 中对应的资产单元的*用户访问权限信息表*即可。当有用户需要在 gsf 中下单时，首先 gsf 会从请求的 token 中获取到用户的信息，接着去*用户访问权限信息表*查看该用户是否有权限，即可完全鉴权。需要调研如下内容。
 
-- [x] casbin鉴权的单元测试改造。在*调研v1.0*中单元测试写的比较分散并且可读性不高的问题。由于*调研v1.0*中鉴权的起点是appid和appsecret，而在该版本中起点是token，所以原本的测试用例也需要调整。
-- [x] 通过接口修改权限信息。casbin在启动时会读取policy.csv文件的权限配置，在运行过程存在需要更新某些权限配置。
-- [x] nacos 上传数据。用户中心将casbin保存的权限配置根据各个资产单元生成一份*用户访问权限信息表*上传到nacos中。
-- [] 设计上传到nacos中数据内容。gsf读取nacos对应的权限信息后自行完成请求用户的权限校验。
+- [x] casbin 鉴权的单元测试改造。在*调研 v1.0*中单元测试写的比较分散并且可读性不高的问题。由于*调研 v1.0*中鉴权的起点是 appid 和 appsecret，而在该版本中起点是 token，所以原本的测试用例也需要调整。
+- [x] 通过接口修改权限信息。casbin 在启动时会读取 policy.csv 文件的权限配置，在运行过程存在需要更新某些权限配置。
+- [x] nacos 上传数据。用户中心将 casbin 保存的权限配置根据各个资产单元生成一份*用户访问权限信息表*上传到 nacos 中。
+- [] 设计上传到 nacos 中数据内容。gsf 读取 nacos 对应的权限信息后自行完成请求用户的权限校验。
 
 ---
 
+用户权限维护使用 casbin 进行负责，数据存放在 mysql 的表（默认表名为 casbin_rule）中，字段有 p_type, v0, v1, v2, v3, v4, v5。在项目*启动时*会加载该表的配置，后续如果需要改动只能通过接口去改动。使用方式如下
+
+- 例 1：给用户 ww（uid: 1523580757186973696）添加访问*资源* EAM101:v1:ip:test 的权限
+
+```text
+step1: 调用 POST /api/uc/v1/gsfsrv/policy/add, body中携带参数如下所示。需要注意的是用户uid前面需要加前缀 USER:。
+{
+	"tpe": "p",
+	"sub": "USER:1523580757186973696",
+	"obj": "EAM101:v1:ip:test"
+}
+如果返回如下结果，则表示添加权限成功；否则为失败。
+{
+    "code": 0,
+    "msg": "",
+    "data": {
+        "@type": "type.googleapis.com/api.gsfsrv.v1.CreatePolicyReply",
+        "ok": true
+    }
+}
+
+step2: 调用查询接口可以查到上述插入的记录 POST /api/uc/v1/gsfsrv/policy/list, body中携带参数如下所示。
+{
+	"tpe": ["p"],
+	"sub": ["USER:1523580757186973696"],
+	"obj": ["EAM101:v1:ip:test"]
+}
+如果返回如下结果，则确认添加权限无误；否则服务有问题。
+{
+    "code": 0,
+    "msg": "",
+    "data": {
+        "@type": "type.googleapis.com/api.gsfsrv.v1.ListPolicyReply",
+        "result": [
+            {
+                "tpe": "p",
+                "v0": "USER:1523580757186973696",
+                "v1": "EAM101:v1:ip:test",
+                "v2": "*"
+            }
+        ],
+        "count": 1
+    }
+}
+```
+
+- 例 2：给用户 ww（uid: 1523580757186973696）添加访问*资源组* EAM 的权限
+
+```text
+step1: 调用 POST /api/uc/v1/gsfsrv/policy/add, body中携带参数如下所示。需要注意的是用户uid前面需要加前缀 USER:， 资源组需要携带前缀 SRCGROUP:。
+{
+	"tpe": "g",
+	"sub": "USER:1523580757186973696",
+	"obj": "SRCGROUP:EAM"
+}
+如果返回如下结果，则表示添加权限成功；否则为失败。
+{
+    "code": 0,
+    "msg": "",
+    "data": {
+        "@type": "type.googleapis.com/api.gsfsrv.v1.CreatePolicyReply",
+        "ok": true
+    }
+}
+
+step2: 调用查询接口可以查到上述插入的记录 POST /api/uc/v1/gsfsrv/policy/list, body中携带参数如下所示。
+{
+	"tpe": ["g"],
+	"sub": ["USER:1523580757186973696"],
+	"obj": ["SRCGROUP:EAM"]
+}
+如果返回如下结果，则确认添加权限无误；否则服务有问题。
+{
+    "code": 0,
+    "msg": "",
+    "data": {
+        "@type": "type.googleapis.com/api.gsfsrv.v1.ListPolicyReply",
+        "result": [
+            {
+                "tpe": "g",
+                "v0": "USER:1523580757186973696",
+                "v1": "SRCGROUP:EAM",
+                "v2": ""
+            }
+        ],
+        "count": 1
+    }
+}
+```
+
+- 例 3：给用户组 quant 添加访问*资源* EAM101:v1:ip:test 的权限
+
+```text
+step1: 调用 POST /api/uc/v1/gsfsrv/policy/add, body中携带参数如下所示。需要注意的是用户组需要带上前缀 USERGROUP:。另外说明下，如果是授权可以访问所有的资源，只需要把资源名改成 * 即可。
+{
+	"tpe": "p",
+	"sub": "USERGROUP:quant",
+	"obj": "EAM101:v1:ip:test"
+}
+如果返回如下结果，则表示添加权限成功；否则为失败。
+{
+    "code": 0,
+    "msg": "",
+    "data": {
+        "@type": "type.googleapis.com/api.gsfsrv.v1.CreatePolicyReply",
+        "ok": true
+    }
+}
+
+step2: 调用查询接口可以查到上述插入的记录 POST /api/uc/v1/gsfsrv/policy/list, body中携带参数如下所示。
+{
+	"tpe": ["p"],
+	"sub": ["USERGROUP:quant"],
+	"obj": ["EAM101:v1:ip:test"]
+}
+如果返回如下结果，则确认添加权限无误；否则服务有问题。
+{
+    "code": 0,
+    "msg": "",
+    "data": {
+        "@type": "type.googleapis.com/api.gsfsrv.v1.ListPolicyReply",
+        "result": [
+            {
+                "tpe": "p",
+                "v0": "USERGROUP:quant",
+                "v1": "EAM101:v1:ip:test",
+                "v2": "*"
+            }
+        ],
+        "count": 1
+    }
+}
+```
+
+- 例 4：将用户 ww （uid: 1523580757186973696）添加到 用户组 quant 中
+
+```text
+step1: 调用 POST /api/uc/v1/gsfsrv/policy/add, body中携带参数如下所示。需要注意的是用户uid前面需要加前缀 USER:，用户组需要携带前缀 USERGROUP:。
+{
+	"tpe": "g",
+	"sub": "USER:1523580757186973696",
+	"obj": "USERGROUP:quant"
+}
+如果返回如下结果，则表示添加权限成功；否则为失败。
+{
+    "code": 0,
+    "msg": "",
+    "data": {
+        "@type": "type.googleapis.com/api.gsfsrv.v1.CreatePolicyReply",
+        "ok": true
+    }
+}
+
+step2: 调用查询接口可以查到上述插入的记录 POST /api/uc/v1/gsfsrv/policy/list, body中携带参数如下所示。
+{
+	"tpe": ["g"],
+	"sub": ["USER:1523580757186973696"],
+	"obj": ["USERGROUP:quant"]
+}
+如果返回如下结果，则确认添加权限无误；否则服务有问题。
+{
+    "code": 0,
+    "msg": "",
+    "data": {
+        "@type": "type.googleapis.com/api.gsfsrv.v1.ListPolicyReply",
+        "result": [
+            {
+                "tpe": "g",
+                "v0": "USER:1523580757186973696",
+                "v1": "USERGROUP:quant",
+                "v2": ""
+            }
+        ],
+        "count": 1
+    }
+}
+```
+
+补充：如果是想给赋予所有的资源的访问权限，只需要添加一个资源为 `*` 的记录即可，例如：`{tpe: "p", sub: "xxx", obj: "*"}`
+
 **实验**
 
-casbin的policy.csv存放到mysql的表中 `casbin_rule{p_type, v0, v1, v2, v3, v4, v5}`，在项目*启动时*会加载该表的配置（后续如果直接对表数据进行修改，并不会生效）
+casbin 的 policy.csv 存放到 mysql 的表中 `casbin_rule{p_type, v0, v1, v2, v3, v4, v5}`，在项目*启动时*会加载该表的配置（后续如果直接对表数据进行修改，并不会生效）
 
 测试场景搭建
+
 ```text
 用户(user)
 boss: 1416962189826199552
@@ -51,7 +232,8 @@ quant(user_group): EAM(src_group), DRW(src_group)
 test(user_group): test(src_group), EAM011:v1:ip:prod(src)
 ```
 
-对应sql
+对应 sql
+
 ```sql
 -- 资源组(src_group)
 INSERT INTO casbin_rule VALUES('p', 'SRCGROUP:test', 'EAM001:v1:ip:test', '*', '', '', '');
@@ -88,7 +270,7 @@ INSERT INTO casbin_rule VALUES('g', 'USER:1506439972247310336', 'USERGROUP:test'
 
 ## 附录
 
-### 1. 定位问题 nacos-sdk-go 调用注册到 nacos 的服务器 http 接口时报 `code = 503 reason = NODE_NOT_FOUND message = error: code = 503 reason = no_available_node message =  metadata = map[] cause = <nil> metadata = map[] cause = <nil>` 
+### 1. 定位问题 nacos-sdk-go 调用注册到 nacos 的服务器 http 接口时报 `code = 503 reason = NODE_NOT_FOUND message = error: code = 503 reason = no_available_node message =  metadata = map[] cause = <nil> metadata = map[] cause = <nil>`
 
 客户端通过 nacos 去调用服务器的 http 方式接口时，会出现问题 `code = 503 reason = NODE_NOT_FOUND message = error: code = 503 reason = no_available_node message =  metadata = map[] cause = <nil> metadata = map[] cause = <nil>`，问题定位如下。解决办法有两种，第一种是采用 grpc 去访问（推荐）；第二种是手动取服务节点转换成最终的 url(比如 `http://127.0.0.1:8000`)去访问。
 
@@ -200,7 +382,7 @@ func (client *Client) do(req *http.Request) (*http.Response, error) {
 
 客户端每次运行前都需要将 cache/naming 中的内容删除，否则无法启动显示: rpc error: code = DeadlineExceeded desc = context deadline exceeded
 
-### 3. 调研v1.0
+### 3. 调研 v1.0
 
 目前存在两个需求点：1. 资产单元的权限管理; 2. 微服务架构下服务的权限管理;
 
