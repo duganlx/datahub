@@ -17,35 +17,6 @@ from utils.eampysdk import EamPySdk
 from utils.localpysdk import LocalPySdk
 from utils.ta import StockTA
 
-def stockTAanalysis(local: bool = False):
-    if local:
-        lcsdk = LocalPySdk()
-        df = lcsdk.getData(dir='tmp', filename='raw.csv')
-    else:
-        eamsdk = EamPySdk()
-        df = eamsdk.getBardayData(
-            universe=['600519.SH'],
-            # where='trade_date > \'2023-07-01\''
-        )
-        # eamsdk.savedf(df, dir='tmp', filename='raw.csv')
-
-    stockTa = StockTA(df)
-
-    # ma = stockTa.ma(5)
-    # ema = stockTa.expma(5)
-    # macd = stockTa.macd()
-    # kdj = stockTa.kdj()
-    # boll = stockTa.boll()
-    # mtm = stockTa.mtm()
-    # rsi = stockTa.rsi()
-    # dmi = stockTa.dmi()
-    # dma = stockTa.dma()
-    # brar = stockTa.brar()
-    # obv = stockTa.obv(offset=32.352-815.769, verbose=True)
-    wr = stockTa.wr(n=10)
-
-    print(wr)
-
 def biclassify(generate=False):
     if generate:
         eamsdk = EamPySdk()
